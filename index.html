@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Что не так? — игра от «Стильно с Медведевой»</title>
+<meta name="description" content="Шесть образов. В каждом что-то мешает. Увидеть. Назвать. Игра от стилиста Татьяны Медведевой.">
+<meta property="og:title" content="Что не так? — игра от стилиста">
+<meta property="og:description" content="Шесть образов. В каждом что-то мешает. Сколько из шести увидите вы?">
+<meta property="og:image" content="https://mmkproject03-dotcom.github.io/chto-ne-tak/cover.jpg">
+<meta property="og:url" content="https://mmkproject03-dotcom.github.io/chto-ne-tak/">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F3EEE6; --card:#FBF8F3; --ink:#26211E; --muted:#786C62; --line:#E2D9CC;
+    --accent:#963C32; --accent-ink:#fff; --ok:#3F6B4A; --ok-bg:#E6EFE6; --bad:#963C32; --bad-bg:#F5E4E0;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--ink)}
+  body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:17px;line-height:1.5;
+       -webkit-font-smoothing:antialiased;min-height:100vh;min-height:100dvh}
+  .wrap{max-width:520px;margin:0 auto;padding:20px 16px calc(28px + env(safe-area-inset-bottom))}
+  .kicker{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);text-align:center}
+  h1{font-family:Lora,Georgia,serif;font-weight:600;font-size:clamp(44px,13vw,64px);line-height:1.05;text-align:center;margin:10px 0 8px}
+  .lead{font-family:Lora,Georgia,serif;font-style:italic;color:var(--accent);font-size:21px;text-align:center}
+  .intro p{color:var(--ink);text-align:center;margin:18px auto 0;max-width:30em}
+  .cover{width:100%;border-radius:14px;display:block;margin:22px 0 4px}
+  .btn{display:block;width:100%;border:0;border-radius:12px;padding:16px 18px;font:600 17px/1.2 Inter,system-ui,sans-serif;
+       background:var(--accent);color:var(--accent-ink);cursor:pointer;text-align:center;text-decoration:none;margin-top:18px;
+       -webkit-tap-highlight-color:transparent;transition:transform .08s ease,opacity .2s}
+  .btn:active{transform:scale(.98)}
+  .btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
+  .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .step{font-family:Lora,Georgia,serif;font-weight:600;font-size:22px}
+  .score{font-size:14px;color:var(--muted)}
+  .bar{height:4px;background:var(--line);border-radius:4px;overflow:hidden;margin-bottom:14px}
+  .bar i{display:block;height:100%;background:var(--accent);transition:width .3s}
+  .photo{width:100%;aspect-ratio:4/5;object-fit:cover;object-position:50% 35%;border-radius:14px;display:block;background:var(--line)}
+  .q{font-family:Lora,Georgia,serif;font-size:22px;text-align:center;margin:16px 0 4px}
+  .hint{font-size:14px;color:var(--muted);text-align:center}
+  .opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+  .opt{border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:14px 10px;
+       font:500 16px/1.2 Inter,system-ui,sans-serif;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .opt.full{grid-column:1/-1}
+  .opt:disabled{cursor:default}
+  .opt.right{border-color:var(--ok);background:var(--ok-bg);color:var(--ok);font-weight:600}
+  .opt.wrong{border-color:var(--bad);background:var(--bad-bg);color:var(--bad)}
+  .opt.dim{opacity:.45}
+  .verdict{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 16px 18px;margin-top:16px;animation:in .25s ease}
+  .verdict b{display:block;font-family:Lora,Georgia,serif;font-size:21px;margin-bottom:6px}
+  .verdict b.ok{color:var(--ok)} .verdict b.no{color:var(--bad)}
+  @keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .final{text-align:center;padding-top:30px}
+  .big{font-family:Lora,Georgia,serif;font-weight:600;font-size:76px;line-height:1;margin:16px 0 6px}
+  .big small{font-size:32px;color:var(--muted)}
+  .final p{margin:14px auto 0;max-width:28em}
+  .sign{margin-top:26px;font-size:13px;color:var(--muted);text-align:center}
+  [hidden]{display:none!important}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  .intro .cover{margin-top:0}
+  .intro .lead{margin-top:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <section id="intro" class="intro">
+    <h1 class="sr">Что не так?</h1>
+    <img class="cover" src="cover.jpg" alt="Что не так? Шесть образов. Найдите, что мешает.">
+    <p class="lead">В каждом образе что-то мешает. Увидеть. Назвать.</p>
+    <p>На каждой карточке выберите, что бы вы поправили. Если всё в порядке, так и отвечайте.</p>
+    <button class="btn" id="start">Начать</button>
+  </section>
+
+  <section id="game" hidden>
+    <div class="top"><div class="step" id="step"></div><div class="score" id="score"></div></div>
+    <div class="bar"><i id="bar"></i></div>
+    <img class="photo" id="photo" alt="Образ">
+    <div class="q">Что здесь поправить?</div>
+    <div class="opts" id="opts"></div>
+    <div class="verdict" id="verdict" hidden><b id="vhead"></b><div id="vtext"></div></div>
+    <button class="btn" id="next" hidden>Дальше</button>
+  </section>
+
+  <section id="final" class="final" hidden>
+    <div class="kicker">Ваш результат</div>
+    <div class="big" id="fscore"></div>
+    <p id="ftext"></p>
+    <p>Больше разборов образов в канале «Стильно с Медведевой».</p>
+    <a class="btn" id="chan" href="https://t.me/medvedeva_style" target="_blank" rel="noopener">Перейти в канал</a>
+    <button class="btn ghost" id="again">Сыграть ещё раз</button>
+  </section>
+
+  <div class="sign">Стилист Татьяна Медведева</div>
+</div>
+
+<script>
+const OK = "Всё хорошо";
+const CARDS = [
+  {img:"obraz-1.jpg", options:["Жакет","Футболка","Джинсы","Обувь","Сумка"], answer:"Жакет",
+   text:"Жакет с чужого плеча. Он мал: пуговица тянет, на талии ткань собирается складками. В своём размере жакет ляжет ровно, и образ станет дороже."},
+  {img:"obraz-2.jpg", options:["Жакет","Рубашка","Юбка","Лоферы","Сумка"], answer:"Юбка",
+   text:"Юбка. Неправильная длина, неудачный выбор силуэта и кроя, устаревшее исполнение плиссе. Всё остальное в образе актуально, а юбка тянет его назад."},
+  {img:"obraz-3.jpg", options:["Пальто","Блуза","Юбка","Сумка","Туфли"], answer:"Юбка",
+   text:"Юбка. Леопард, горох и цветы в одном образе дают шум: глаз не знает, куда смотреть, и вещи спорят между собой. Уберите рисунок с юбки и возьмите её однотонной, бордовой в цвет сумки. Тогда леопард ведёт, горох его поддерживает, а бордовый связывает образ."},
+  {img:"obraz-4.jpg", options:["Жакет","Рубашка","Джинсы","Обувь","Сумка"], answer:"Джинсы",
+   text:"Джинсы. Верх длинный, а широкий подворот обрезает ногу на середине икры, поэтому силуэт выглядит короче и тяжелее. Опустите подворот, пусть джинсы ложатся на обувь, и ноги будут казаться длиннее."},
+  {img:"obraz-5.jpg", options:["Пальто","Платье","Сапоги","Сумка"], answer:"Платье",
+   text:"Платье. Оно мало по размеру: на талии и бёдрах ткань натягивается и собирается в поперечные складки. И оно коротковато: между подолом и сапогами видно колено, и линия ноги прерывается. Возьмите платье свободнее и длиннее, чтобы сапоги уходили под подол и не выделялись. Силуэт станет цельным, а образ дороже."},
+  {img:"obraz-6.jpg", options:["Пальто","Блуза","Брюки","Сумка","Туфли"], answer:OK,
+   text:"Здесь всё хорошо! Клетка и цветы разные по рисунку, но соразмерны, поэтому не спорят. Красная сумка подхватывает розовый в блузе, а коричневый и жёлтый — соседи на цветовом круге. Смелый, но собранный образ."}
+];
+const $ = id => document.getElementById(id);
+let i = 0, score = 0;
+
+// заранее подгружаем картинки, чтобы карточки открывались без задержки
+CARDS.forEach(c => { const im = new Image(); im.src = c.img; });
+
+function show(id){ ["intro","game","final"].forEach(s => $(s).hidden = s !== id); window.scrollTo(0,0); }
+
+function render(){
+  const c = CARDS[i];
+  $("step").textContent = `Образ ${i+1} из ${CARDS.length}`;
+  $("score").textContent = `Верно: ${score}`;
+  $("bar").style.width = `${(i)/CARDS.length*100}%`;
+  $("photo").src = c.img;
+  $("verdict").hidden = true; $("next").hidden = true;
+  const box = $("opts"); box.innerHTML = "";
+  const all = [...c.options, OK];
+  all.forEach((o, n) => {
+    const b = document.createElement("button");
+    b.className = "opt" + ((n === all.length-1 && all.length % 2 === 1) ? " full" : "");
+    b.textContent = o;
+    b.onclick = () => pick(o, b);
+    box.appendChild(b);
+  });
+}
+
+function pick(choice, btn){
+  const c = CARDS[i], ok = choice === c.answer;
+  if (ok) score++;
+  [...$("opts").children].forEach(b => {
+    b.disabled = true;
+    if (b.textContent === c.answer) b.classList.add("right");
+    else if (b === btn) b.classList.add("wrong");
+    else b.classList.add("dim");
+  });
+  $("vhead").textContent = ok ? "Верно!" : "Не совсем.";
+  $("vhead").className = ok ? "ok" : "no";
+  $("vtext").textContent = c.text;
+  $("verdict").hidden = false;
+  $("score").textContent = `Верно: ${score}`;
+  $("bar").style.width = `${(i+1)/CARDS.length*100}%`;
+  $("next").textContent = i === CARDS.length-1 ? "Узнать результат" : "Дальше";
+  $("next").hidden = false;
+  $("verdict").scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+function finish(){
+  const n = CARDS.length;
+  $("fscore").innerHTML = `${score}<small> из ${n}</small>`;
+  $("ftext").textContent = score === n ? "У вас глаз стилиста!"
+    : score >= 4 ? "Отличный результат! Вы видите больше, чем кажется."
+    : "Это и правда непросто: ошибки прячутся в мелочах. Именно их я и разбираю в своём канале.";
+  show("final");
+}
+
+$("start").onclick = () => { i = 0; score = 0; show("game"); render(); };
+$("next").onclick = () => { i++; if (i < CARDS.length) { render(); window.scrollTo(0,0); } else finish(); };
+$("again").onclick = () => { i = 0; score = 0; show("game"); render(); };
+</script>
+</body>
+</html>
