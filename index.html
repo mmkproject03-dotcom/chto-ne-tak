@@ -90,7 +90,10 @@
     <div class="big" id="fscore"></div>
     <p id="ftext"></p>
     <p>Больше разборов образов в канале «Стильно с Медведевой».</p>
-    <a class="btn" id="chan" href="https://t.me/medvedeva_style" target="_blank" rel="noopener">Перейти в канал</a>
+    <div id="chans">
+      <a class="btn" id="ch-max" href="https://max.ru/channel_medvedeva_style" target="_blank" rel="noopener">Канал в MAX</a>
+      <a class="btn" id="ch-tg" href="https://t.me/medvedeva_style" target="_blank" rel="noopener">Канал в Telegram</a>
+    </div>
     <button class="btn ghost" id="again">Сыграть ещё раз</button>
   </section>
 
@@ -167,6 +170,14 @@ function finish(){
     : "Это и правда непросто: ошибки прячутся в мелочах. Именно их я и разбираю в своём канале.";
   show("final");
 }
+
+// по умолчанию главная кнопка — MAX; со ссылкой ?tg главной становится Telegram
+(() => {
+  const tgFirst = new URLSearchParams(location.search).has("tg");
+  const first = tgFirst ? $("ch-tg") : $("ch-max"), second = tgFirst ? $("ch-max") : $("ch-tg");
+  second.classList.add("ghost");
+  $("chans").append(first, second);
+})();
 
 $("start").onclick = () => { i = 0; score = 0; show("game"); render(); };
 $("next").onclick = () => { i++; if (i < CARDS.length) { render(); window.scrollTo(0,0); } else finish(); };
