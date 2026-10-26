@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Что не так? Выпуск 2 — игра от «Стильно с Медведевой»</title>
+<meta name="description" content="Пять осенних образов. Несколько правок — другое впечатление. Игра от стилиста Татьяны Медведевой.">
+<meta property="og:title" content="Что не так? Выпуск 2">
+<meta property="og:description" content="Пять осенних образов. Несколько правок — другое впечатление. Что бы изменили вы?">
+<meta property="og:image" content="https://mmkproject03-dotcom.github.io/chto-ne-tak/v2/cover.jpg">
+<meta property="og:url" content="https://mmkproject03-dotcom.github.io/chto-ne-tak/v2/">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F3EEE6; --card:#FBF8F3; --ink:#26211E; --muted:#786C62; --line:#E2D9CC;
+    --accent:#963C32; --accent-ink:#fff; --best:#3F6B4A; --best-bg:#E6EFE6; --half:#8A6420; --half-bg:#F6EDD9; --no:#786C62; --no-bg:#EFE9E1;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--ink)}
+  body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:17px;line-height:1.5;
+       -webkit-font-smoothing:antialiased;min-height:100vh;min-height:100dvh}
+  .wrap{max-width:520px;margin:0 auto;padding:20px 16px calc(28px + env(safe-area-inset-bottom))}
+  .kicker{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);text-align:center}
+  .lead{font-family:Lora,Georgia,serif;font-style:italic;color:var(--accent);font-size:21px;text-align:center;margin-top:16px}
+  .intro p{text-align:center;margin:14px auto 0;max-width:30em}
+  .legend{font-size:15px;color:var(--muted);text-align:center;margin-top:10px}
+  .cover{width:100%;border-radius:14px;display:block}
+  .btn{display:block;width:100%;border:0;border-radius:12px;padding:16px 18px;font:600 17px/1.2 Inter,system-ui,sans-serif;
+       background:var(--accent);color:var(--accent-ink);cursor:pointer;text-align:center;text-decoration:none;margin-top:18px;
+       -webkit-tap-highlight-color:transparent;transition:transform .08s ease}
+  .btn:active{transform:scale(.98)}
+  .btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
+  .link{display:block;text-align:center;margin-top:16px;color:var(--muted);font-size:15px}
+  .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .step{font-family:Lora,Georgia,serif;font-weight:600;font-size:22px}
+  .score{font-size:14px;color:var(--muted)}
+  .bar{height:4px;background:var(--line);border-radius:4px;overflow:hidden;margin-bottom:14px}
+  .bar i{display:block;height:100%;background:var(--accent);transition:width .3s}
+  .photo{width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:14px;display:block;background:var(--line)}
+  .q{font-family:Lora,Georgia,serif;font-size:20px;margin:16px 0 4px}
+  .hint{font-size:14px;color:var(--muted);font-style:italic;margin-top:4px}
+  .opts{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+  .opt{display:flex;gap:12px;align-items:flex-start;text-align:left;border:1.5px solid var(--line);background:var(--card);color:var(--ink);
+       border-radius:12px;padding:13px 14px;font:500 16px/1.35 Inter,system-ui,sans-serif;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .opt .n{flex:none;width:26px;height:26px;border-radius:50%;background:var(--bg);display:grid;place-items:center;font-weight:600;font-size:14px}
+  .opt:disabled{cursor:default}
+  .opt.dim{opacity:.45}
+  .opt.picked{border-color:var(--ink)}
+  .opt .g{margin-left:auto;flex:none}
+  .verdict{border-radius:14px;padding:16px 16px 18px;margin-top:16px;animation:in .25s ease;border:1px solid var(--line);background:var(--card)}
+  .verdict b{display:block;font-family:Lora,Georgia,serif;font-size:21px;margin-bottom:6px}
+  .verdict.best{background:var(--best-bg);border-color:#C9DCC9} .verdict.best b{color:var(--best)}
+  .verdict.half{background:var(--half-bg);border-color:#E8D7B0} .verdict.half b{color:var(--half)}
+  .verdict.no b{color:var(--no)}
+  .verdict .you{font-size:14px;color:var(--muted);margin-bottom:8px}
+  .tip{margin-top:12px;padding-top:12px;border-top:1px solid rgba(0,0,0,.08)}
+  @keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .final{text-align:center;padding-top:30px}
+  .big{font-family:Lora,Georgia,serif;font-weight:600;font-size:64px;line-height:1;margin:16px 0 6px}
+  .big small{font-size:28px;color:var(--muted)}
+  .sub{color:var(--muted)}
+  .final p{margin:14px auto 0;max-width:28em}
+  .sign{margin-top:26px;font-size:13px;color:var(--muted);text-align:center}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <section id="intro" class="intro">
+    <img class="cover" src="cover.jpg" alt="Что не так? Выпуск 2. Несколько правок — другое впечатление">
+    <p>Пять осенних образов. Всё по отдельности хорошо, а вместе что-то не складывается. Выберите, что бы изменили вы, — и сразу увидите результат на фото.</p>
+    <p>Неправильных ответов нет: есть решения сильнее и слабее.</p>
+    <p class="legend">⭐ лучшее решение · 👌 стало лучше · 💭 так носить можно, но задачу не решает</p>
+    <button class="btn" id="start">Начать</button>
+    <a class="link" href="../">Прошлый выпуск →</a>
+  </section>
+
+  <section id="game" hidden>
+    <div class="top"><div class="step" id="step"></div><div class="score" id="score"></div></div>
+    <div class="bar"><i id="bar"></i></div>
+    <img class="photo" id="photo" alt="Образ">
+    <div class="q" id="q"></div>
+    <div class="hint" id="cum" hidden>Каждый следующий вариант включает предыдущий.</div>
+    <div class="opts" id="opts"></div>
+    <div class="verdict" id="verdict" hidden></div>
+    <button class="btn ghost" id="showbest" hidden>⭐ Показать лучшее решение</button>
+    <button class="btn" id="next" hidden>Дальше</button>
+  </section>
+
+  <section id="final" class="final" hidden>
+    <div class="kicker">Ваш результат</div>
+    <div class="big" id="fscore"></div>
+    <div class="sub" id="fhalf"></div>
+    <p id="ftext"></p>
+    <p>Больше разборов образов в канале «Стильно с Медведевой».</p>
+    <div id="chans">
+      <a class="btn" id="ch-max" href="https://max.ru/channel_medvedeva_style" target="_blank" rel="noopener">Канал в MAX</a>
+      <a class="btn" id="ch-tg" href="https://t.me/medvedeva_style" target="_blank" rel="noopener">Канал в Telegram</a>
+    </div>
+    <button class="btn ghost" id="again">Сыграть ещё раз</button>
+    <a class="link" href="../">Прошлый выпуск →</a>
+  </section>
+
+  <div class="sign">Стилист Татьяна Медведева</div>
+</div>
+
+<script>
+const CARDS = [
+{
+"img": "k1-do.jpg",
+"q": "Вещи объёмные, и фигура в них теряется. Что бы вы поменяли, ничего не покупая?",
+"cum": false,
+"tip": "возьмите самый объёмный образ и найдите в нём одну точку, которую можно отметить: талию или щиколотку.",
+"opts": [
+{
+"l": "Снять свитер с плеч",
+"g": "no",
+"img": "k1-var-bez-svitera.jpg",
+"t": "Так носить можно, но фигура по-прежнему теряется. Образ стал легче, а талии так и не видно."
+},
+{
+"l": "Заправить брюки в носки",
+"g": "half",
+"img": "k1-var-noski.jpg",
+"t": "Стало лучше, но фигура видна наполовину. Щиколотка открылась, длина стала точной, а корпус остался длинным."
+},
+{
+"l": "Застегнуть пальто",
+"g": "no",
+"img": "k1-var-palto.jpg",
+"t": "Так носить можно, но фигура по-прежнему теряется. Образ стал одним длинным прямоугольником."
+},
+{
+"l": "Надеть свитер поверх рубашки, заправить спереди и убрать брюки в носки",
+"g": "best",
+"img": "k1-posle.jpg",
+"t": "Фигура появилась, а объём остался. Свитер поверх рубашки даёт V-вырез и вертикаль, заправка спереди отмечает талию, брюки в носках открывают щиколотку и убирают длину с мокрого асфальта. Так объёмный прямой силуэт стал собранным, и пропорции стали заметны. Ни одной новой вещи."
+}
+]
+},
+{
+"img": "k2-do.jpg",
+"q": "На ней: кожаная куртка, под ней серый свитер и белая футболка с принтом, широкие серые брюки с ремнём, лоферы, сумка. Куртка застёгнута, и ничего, кроме неё, не видно. Что бы вы поменяли, ничего не покупая?",
+"cum": false,
+"tip": "что у вас спрятано под застёгнутой курткой? Принт, ремень, фактура — откройте хотя бы одно.",
+"opts": [
+{
+"l": "Расстегнуть куртку",
+"g": "half",
+"img": "k2-var-rasstegnut.jpg",
+"t": "Стало лучше: талия видна, свитер с ремнём собирает силуэт. Но весь образ серый и спокойный, принт и фактуры остались спрятаны."
+},
+{
+"l": "Заправить брюки в носки",
+"g": "no",
+"img": "k2-var-noski.jpg",
+"t": "Низ стал спортивнее, но куртка по-прежнему закрывает всё, и верх остался квадратным."
+},
+{
+"l": "Повязать свитер на пояс",
+"g": "no",
+"img": "k2-var-poyas.jpg",
+"t": "Так носят, но свитер добавил объём на бёдрах, а талия под ним потерялась."
+},
+{
+"l": "Расстегнуть куртку, свитер накинуть на плечи, футболку оставить под ремнём",
+"g": "best",
+"img": "k2-posle.jpg",
+"t": "Образ ожил. Талия отмечена ремнём, футболка с принтом добавила характер, свитер на плечах дал фактуру и объём сверху. Внизу широкие брюки, вверху лёгкий акцент — пропорции читаются."
+}
+]
+},
+{
+"img": "k3-do.jpg",
+"q": "Оливковый тренч, под ним бордовый костюм — жакет и юбка, кремовый джемпер под жакетом, телесные колготки, коричневые дерби и сумка. Всё сочетается, но взгляду не за что зацепиться. Что бы вы изменили?",
+"cum": true,
+"tip": "возьмите спокойный образ и меняйте по одной детали — колготки, длину жакета, цвет у лица, аксессуары. Смотрите в зеркало после каждого шага.",
+"opts": [
+{
+"l": "Надеть колготки в зелёную полоску",
+"g": "no",
+"img": "k3-var1-kolgotki.jpg",
+"t": "Хорошее начало: полоска повторила зелёный тренча и связала низ с верхом. Но бордовый костюм всё ещё одним большим пятном."
+},
+{
+"l": "Колготки + укоротить и приталить жакет",
+"g": "half",
+"img": "k3-var2-zhaket.jpg",
+"t": "Появилась талия, юбка раскрылась объёмом, силуэт стал женственнее. Но верх пока спокойный."
+},
+{
+"l": "Колготки, приталенный жакет + свитер на плечи",
+"g": "half",
+"img": "k3-var3-sviter.jpg",
+"t": "Свитер цвета охры дал цвет у лица и объём вверху, повторил осенние листья. Почти готово."
+},
+{
+"l": "Всё это + сменить сумку на клатч из питона и надеть перчатки в цвет костюма",
+"g": "best",
+"img": "k3-posle.jpg",
+"t": "Образ закончен. Перчатки продолжили бордовый костюма, клатч добавил фактуру и характер. Каждая деталь работает на общее впечатление."
+}
+]
+},
+{
+"img": "k4-do.jpg",
+"q": "Чёрная парка, под ней объёмный светлый свитер с косами, на плечах ещё один светлый свитер, бордовые брюки-баллоны, серые кроссовки. Вещей много, и все объёмные. Что бы вы изменили?",
+"cum": true,
+"tip": "если в образе много объёмных вещей, оставьте объём в одном месте, а остальное сделайте тоньше и спокойнее.",
+"opts": [
+{
+"l": "Заправить свитер и надеть носки в цвет куртки и полосок на кроссовках",
+"g": "no",
+"img": "k4-var1-zapravit.jpg",
+"t": "Появилась талия, а тёмные носки связали низ с курткой и кроссовками. Но вверху по-прежнему два объёмных свитера, и образ тяжёлый."
+},
+{
+"l": "Снять свитер с косами, надеть вместо него свитер с плеч, уменьшить объём брюк",
+"g": "half",
+"img": "k4-var2-sviter.jpg",
+"t": "Лишний объём ушёл: один тонкий свитер вместо двух, брюки спокойнее. Образ стал легче, но пока простой и немного спортивный."
+},
+{
+"l": "Сменить джемпер на тёмно-серый в тон куртке, надеть ремень, топсайдеры со светлыми носками и замшевую сумку",
+"g": "half",
+"img": "k4-var3-temny.jpg",
+"t": "Тёмный джемпер продолжил куртку, и верх стал цельным, бордовые брюки — главным акцентом. Ремень отметил талию, топсайдеры и замша сменили спорт на городской стиль."
+},
+{
+"l": "Всё вышеперечисленное плюс утеплить шею воротником или шарфом",
+"g": "best",
+"img": "k4-posle.jpg",
+"t": "Образ закончен и по погоде: вязаный воротник добавил фактуру и уют у лица, верх собран. Из спортивного комплекта получился продуманный городской образ."
+}
+]
+},
+{
+"img": "k5-do.jpg",
+"q": "Серое пальто по фигуре, серый джемпер, чёрная кожаная юбка-карандаш, высокие сапоги, маленькая чёрная сумка. Всё по фигуре и всё тёмное — образ сливается в одно строгое пятно. Что бы вы изменили?",
+"cum": true,
+"tip": "в тёмном образе по фигуре добавьте одну объёмную вещь, одну фактуру и один тёплый акцент.",
+"opts": [
+{
+"l": "Сменить пальто на объёмное современного кроя",
+"g": "no",
+"img": "k5-var1-palto.jpg",
+"t": "Появился контраст: большое пальто поверх узкой базы, как носят в этом сезоне. Но внутри всё по-прежнему сливается."
+},
+{
+"l": "+ добавить объёмный свитер",
+"g": "no",
+"img": "k5-var2-sviter.jpg",
+"t": "Объём есть и сверху, и снаружи, и талия потерялась. Образ стал тяжелее, а не интереснее."
+},
+{
+"l": "+ поменять свитер на менее объёмную водолазку, юбку взять на размер свободнее, добавить ремень и глянца",
+"g": "half",
+"img": "k5-var3-remen.jpg",
+"t": "Водолазка продолжила линию шеи, ремень отметил талию, юбка села свободнее и перестала обтягивать, глянец кожи добавил фактуру. Тёмная база перестала быть одним пятном."
+},
+{
+"l": "+ поменять сумку и добавить перчатки",
+"g": "best",
+"img": "k5-posle.jpg",
+"t": "Тёплые акценты — сумка цвета карамели и перчатки цвета бордо — оживили тёмный образ и повторили осень вокруг. Строгость осталась, а образ стал дорогим и живым."
+}
+]
+}
+];
+const GRADE = {best:"⭐ Лучшее решение", half:"👌 Стало лучше", no:"💭 Так носить можно, но задачу это не решает"};
+const $ = id => document.getElementById(id);
+let i = 0, best = 0, half = 0;
+
+// подгружаем все фото заранее
+CARDS.forEach(c => [c.img, ...c.opts.map(o => o.img)].forEach(s => { const im = new Image(); im.src = s; }));
+
+function show(id){ ["intro","game","final"].forEach(s => $(s).hidden = s !== id); window.scrollTo(0,0); }
+const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;");
+
+function render(){
+  const c = CARDS[i];
+  $("step").textContent = `Образ ${i+1} из ${CARDS.length}`;
+  $("score").textContent = `⭐ ${best}`;
+  $("bar").style.width = `${i/CARDS.length*100}%`;
+  $("photo").src = c.img;
+  $("q").textContent = c.q;
+  $("cum").hidden = !c.cum;
+  $("verdict").hidden = true; $("next").hidden = true; $("showbest").hidden = true;
+  const box = $("opts"); box.innerHTML = "";
+  c.opts.forEach((o, n) => {
+    const b = document.createElement("button");
+    b.className = "opt";
+    b.innerHTML = `<span class="n">${n+1}</span><span>${esc(o.l)}</span>`;
+    b.onclick = () => pick(n);
+    box.appendChild(b);
+  });
+}
+
+function verdict(o, picked){
+  const c = CARDS[i];
+  const v = $("verdict");
+  v.className = "verdict " + o.g;
+  v.innerHTML = `<b>${picked ? GRADE[o.g] : "⭐ Лучшее решение"}</b>` +
+    `<div class="you">${picked ? "Вы выбрали: " : ""}${esc(o.l)}</div>` +
+    `<div>${esc(o.t)}</div>` +
+    (o.g === "best" ? `<div class="tip"><b style="font-size:17px;display:inline">Проверьте у себя:</b> ${esc(c.tip)}</div>` : "");
+  v.hidden = false;
+  $("photo").src = o.img;
+}
+
+function pick(n){
+  const c = CARDS[i], o = c.opts[n];
+  if (o.g === "best") best++; else if (o.g === "half") half++;
+  [...$("opts").children].forEach((b, k) => {
+    b.disabled = true;
+    if (k === n) { b.classList.add("picked"); b.insertAdjacentHTML("beforeend", `<span class="g">${GRADE[o.g].split(" ")[0]}</span>`); }
+    else b.classList.add("dim");
+  });
+  verdict(o, true);
+  $("score").textContent = `⭐ ${best}`;
+  $("bar").style.width = `${(i+1)/CARDS.length*100}%`;
+  $("showbest").hidden = o.g === "best";
+  $("next").textContent = i === CARDS.length-1 ? "Узнать результат" : "Дальше";
+  $("next").hidden = false;
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+$("showbest").onclick = () => {
+  verdict(CARDS[i].opts.find(o => o.g === "best"), false);
+  $("showbest").hidden = true;
+  window.scrollTo({top:0, behavior:"smooth"});
+};
+
+function finish(){
+  const n = CARDS.length;
+  $("fscore").innerHTML = `⭐ ${best}<small> из ${n}</small>`;
+  $("fhalf").textContent = `👌 Шаг в верном направлении — ${half}`;
+  $("ftext").textContent = best === n ? "Вы видите образ, как стилист!"
+    : best >= n - 2 ? "Отличное чутьё на детали."
+    : "Стайлинг — это навык, и он тренируется. Каждую неделю — новый выпуск.";
+  show("final");
+}
+
+// по умолчанию главная кнопка — MAX; со ссылкой ?tg главной становится Telegram
+(() => {
+  const tgFirst = new URLSearchParams(location.search).has("tg");
+  const first = tgFirst ? $("ch-tg") : $("ch-max"), second = tgFirst ? $("ch-max") : $("ch-tg");
+  second.classList.add("ghost");
+  $("chans").append(first, second);
+})();
+
+const restart = () => { i = 0; best = 0; half = 0; show("game"); render(); };
+$("start").onclick = restart;
+$("again").onclick = () => show("intro");
+$("next").onclick = () => { i++; if (i < CARDS.length) { render(); window.scrollTo(0,0); } else finish(); };
+</script>
+</body>
+</html>
