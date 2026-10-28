@@ -105,7 +105,7 @@ a.btn{text-decoration:none}
   <header>
     <span class="eyebrow">Стильно с Медведевой · приложение</span>
     <h1>Подбор цвета к образу</h1>
-    <p class="lead">Сфотографируй вещь, обведи её и отметь касанием детали: вышивку, пуговицы, полоску. Приложение составит паспорт вещи и предложит несколько цветов с объяснением, почему каждый подходит. Сейчас открыт пример: серый пиджак в полоску с вышивкой.</p>
+    <p class="lead">Сфотографируй вещь, обведи её и отметь касанием детали: вышивку, пуговицы, полоску. Приложение составит паспорт вещи и подберёт палитру по цветовому кругу и яркости.</p>
   </header>
 
   <div class="steps">
@@ -117,7 +117,9 @@ a.btn{text-decoration:none}
       <div class="row" id="outlineBtns">
         <button class="btn ghost" id="redo" type="button">Обвести заново</button>
         <button class="btn ghost" id="whole" type="button">Взять весь кадр</button>
+        <button class="btn ghost" id="clearAll" type="button">Очистить</button>
       </div>
+      <button class="btn ghost" id="demoBtn" type="button" style="align-self:flex-start">Посмотреть на примере</button>
       <div class="row" id="whiteBtns" hidden>
         <button class="btn" id="saveWhite" type="button">Сохранить вещь</button>
         <button class="btn ghost" id="cancelWhite" type="button">Отмена</button>
@@ -153,6 +155,11 @@ a.btn{text-decoration:none}
       </section>
     </div>
   </div>
+
+  <section class="panel" id="emptyNote" hidden>
+    <div class="step-h"><span class="num">4</span><h2>Палитра появится здесь</h2></div>
+    <p class="hint">Загрузи фото вещи на первом шаге, и приложение поставит её цвета на цветовой круг, подберёт палитру и покажет каждый цвет тканью рядом с вещью. Чтобы сначала посмотреть, как это работает, нажми «Посмотреть на примере».</p>
+  </section>
 
   <section class="panel wheel-panel">
     <div class="step-h"><span class="num">4</span><h2>Цветовой круг</h2></div>
@@ -356,7 +363,11 @@ function updateItem(keepAcc){item.img=processImg(item.raw,item.wb);item.cut=cuto
   if(!ed.white){ed.img=item.img;ed.poly=item.poly}drawEditor();renderAll()}
 
 // ===== редактор =====
-function drawEditor(){const img=ed.img;if(!img)return;editor.width=img.width;editor.height=img.height;ex.drawImage(img,0,0);
+function drawEditor(){const img=ed.img;if(!img){editor.width=675;editor.height=560;const bg=css('--bg'),ink=css('--muted'),ac=css('--accent');ex.fillStyle=bg;ex.fillRect(0,0,675,560);
+    ex.setLineDash([14,10]);ex.lineWidth=3;ex.strokeStyle=css('--line');ex.strokeRect(14,14,647,532);ex.setLineDash([]);
+    ex.strokeStyle=ac;ex.lineWidth=5;ex.beginPath();ex.roundRect?ex.roundRect(282,170,110,82,14):ex.rect(282,170,110,82);ex.stroke();ex.beginPath();ex.arc(337,211,22,0,7);ex.stroke();ex.fillStyle=ac;ex.fillRect(305,160,30,12);
+    ex.fillStyle=ink;ex.textAlign='center';ex.font=`500 26px ${css('--body')}`;ex.fillText('Нажми, чтобы сфотографировать',337,310);ex.fillText('или загрузить вещь',337,346);
+    ex.font=`20px ${css('--body')}`;ex.fillText('Лучше всего: вещь целиком, при дневном свете',337,410);return}editor.width=img.width;editor.height=img.height;ex.drawImage(img,0,0);
   const p=ed.poly,lw=Math.max(2,img.width/220);
   if(p.length>2){ex.save();ex.beginPath();ex.rect(0,0,img.width,img.height);p.forEach(([x,y],i)=>i?ex.lineTo(x,y):ex.moveTo(x,y));ex.closePath();ex.fillStyle='rgba(20,10,25,.45)';ex.fill('evenodd');ex.restore();
     ex.beginPath();p.forEach(([x,y],i)=>i?ex.lineTo(x,y):ex.moveTo(x,y));ex.closePath();ex.lineWidth=lw;ex.strokeStyle='#ffffff';ex.setLineDash([10,7]);ex.stroke();ex.setLineDash([])}
@@ -558,10 +569,17 @@ function drawCompare(cv,rec){const x=cv.getContext('2d'),W=cv.width,H=cv.height,
 
 // ===== отрисовка =====
 function chips(el,list,cur,on){el.innerHTML=list.map(r=>`<button type="button" class="chip" data-id="${r.id}" aria-pressed="${r.id===cur}">${r.name}</button>`).join('');el.onclick=e=>{const b=e.target.closest('.chip');if(b)on(b.dataset.id)}}
-function renderModes(){const el=document.getElementById('modeChips');el.hidden=ed.white;document.getElementById('outlineBtns').hidden=ed.white||mode!=='outline';
+function renderModes(){const el=document.getElementById('modeChips'),emp=!item.raw&&!ed.white;el.hidden=ed.white||emp;document.getElementById('outlineBtns').hidden=ed.white||emp||mode!=='outline';
   chips(el,[{id:'outline',name:'Обвести вещь'},{id:'details',name:'Отметить детали'}],mode,id=>{mode=id;renderModes();setHint()});setHint()}
 function targets(){const grp=ROLE_GROUP[item.role];return TARGETS.filter(t=>!(grp==='top'&&(t.id==='top'||t.id==='knit'))&&!(grp==='bottom'&&t.id==='bottom'))}
+function emptyState(on){document.querySelectorAll('.wheel-panel,.hero').forEach(el=>el.hidden=on);document.getElementById('emptyNote').hidden=!on;
+  ['outlineBtns','modeChips'].forEach(id=>{const el=document.getElementById(id);if(on)el.hidden=true});document.getElementById('demoBtn').hidden=!on}
 function renderAll(){
+  if(!item.raw){emptyState(true);chips(document.getElementById('roleChips'),ROLES,item.role,id=>{item.role=id;renderAll()});const tl=targets();if(!tl.some(t=>t.id===target))target=tl[0].id;
+    chips(document.getElementById('targetChips'),tl,target,id=>{target=id;renderAll()});chips(document.getElementById('printChips'),PRINTS,item.print,id=>{item.print=id;renderAll()});
+    document.getElementById('printAdvice').textContent=PRINT_ADVICE[item.print];document.getElementById('mainSw').style.background='transparent';document.getElementById('mainName').textContent='—';
+    document.getElementById('mainMeta').textContent='появится после фото';document.getElementById('toneNote').textContent='';document.getElementById('accs').innerHTML='';document.getElementById('accHint').hidden=false;return}
+  emptyState(false);renderModes();
   chips(document.getElementById('roleChips'),ROLES,item.role,id=>{item.role=id;selected=null;renderAll()});
   const tl=targets();if(!tl.some(t=>t.id===target))target=tl[0].id;
   chips(document.getElementById('targetChips'),tl,target,id=>{target=id;selected=null;anyRec=null;renderAll()});
@@ -609,11 +627,15 @@ document.getElementById('anyPick').addEventListener('change',e=>{anyRec=verdict2
 // ===== старт: пример — серый пиджак в полоску с вышивкой =====
 renderModes();
 const S=675/960;
-const img=new Image();img.onload=()=>{item.raw=img;
+function loadDemo(){const img=new Image();img.onload=()=>{item.raw=img;mode='outline';selected=null;anyRec=null;rotA=null;baseId=null;
   item.poly=[[150,120],[330,40],[440,20],[560,20],[640,40],[830,110],[880,200],[920,500],[950,900],[958,1080],[930,1090],[915,1200],[560,1205],[150,1140],[135,1000],[10,1010],[2,960],[2,640],[60,250]].map(p=>[p[0]*S,p[1]*S]);
   item.accents=[{x:618*S,y:536*S,hex:'#d4a46d',preset:true},{x:908*S,y:322*S,hex:'#7c4014',preset:true},{x:296*S,y:305*S,hex:'#d2c6b7',preset:true}];
-  item.print='small';loadFabrics(()=>{Object.keys(gCache).forEach(k=>delete gCache[k]);updateItem(true)})};
-img.src=SAMPLE_SRC;
+  item.print='small';item.manual=false;updateItem(true)};img.src=SAMPLE_SRC}
+function clearAll(){Object.assign(item,{raw:null,img:null,poly:[],color:null,manual:false,cut:null,box:null,accents:[],print:'plain'});ed.img=null;ed.poly=[];
+  selected=null;anyRec=null;rotA=null;baseId=null;customBase=null;mode='outline';document.getElementById('wb').checked=false;item.wb=false;drawEditor();renderAll();scrollTo({top:0,behavior:'smooth'})}
+document.getElementById('clearAll').onclick=clearAll;document.getElementById('demoBtn').onclick=loadDemo;
+editor.addEventListener('click',()=>{if(!ed.img)document.getElementById('photoIn').click()});
+loadFabrics(()=>{Object.keys(gCache).forEach(k=>delete gCache[k]);renderAll()});drawEditor();renderAll();
 TARGETS.forEach(t=>{const u=load('own-'+t.id);if(u)decodeMap(u,m=>{custom[t.id]=m;renderAll()})});
 })();
 </script>
