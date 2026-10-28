@@ -83,6 +83,10 @@ label.chk{display:flex;gap:8px;align-items:center;font-size:14px;cursor:pointer}
 @media (max-width:840px){.wheel-grid{grid-template-columns:1fr}}
 #wheel{width:100%;max-width:520px;height:auto;justify-self:center;cursor:pointer;touch-action:manipulation}
 .wheel-ctl{display:flex;flex-direction:column;min-width:0}
+.adjs{display:flex;flex-direction:column;gap:8px;padding-block:10px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.adj{display:grid;grid-template-columns:7.5em minmax(0,1fr) 5.5em;gap:10px;align-items:center;font-size:13px;color:var(--muted)}
+.adj span:last-child{text-align:right}
+.adj input{width:100%;accent-color:var(--accent)}
 .foot{font-size:13px;color:var(--muted);max-width:76ch;margin:0}
 </style>
 </head><body>
@@ -200,19 +204,21 @@ function nameOf(hex){const{h,s,v}=hsv(h2r(hex));
   const a=toRyb(h);
   if(v>0.82&&s<0.4){if(a<30||a>=345)return 'пудрово-розовый';if(a<85)return 'персиковый';if(a<140)return 'ванильный';
     if(a<195)return 'светлый шалфей';if(a<228)return 'светло-бирюзовый';if(a<268)return 'голубой';if(a<315)return 'лавандовый';return 'сиреневый'}
+  if(h>=328&&h<348)return v<0.5?'винный':(s<0.55?'пыльно-розовый':(s>0.75&&v>0.7?'фуксия':'малиновый'));
   if(a<20||a>=345)return v<0.5?'бордовый':(s<0.65&&v<0.78?'кирпичный':'красный');
   if(a<45&&v>=0.45&&v<0.82&&s<0.7)return 'терракотовый';
   if(a<75)return v<0.45?'коричневый':(v<0.62?'рыжий':(s<0.6?'карамельный':'оранжевый'));
   if(a<135)return v<0.6?'оливковый':'горчичный';
+  if(a>=135&&a<195&&s<0.35&&v>=0.6)return 'шалфей';
   if(a<195&&s<0.6&&v<0.7)return 'оливково-зелёный';
   if(a<195)return v<0.45?'тёмно-зелёный':(s<0.45?'хаки':'зелёный');
   if(a<228)return v<0.45?'петроль':'бирюзовый';
   if(a<268)return v<0.5?'тёмно-синий':'синий';
-  if(a<315)return v<0.45?'баклажановый':(s<0.6&&v<0.7?'сливовый':'фиолетовый');
-  return v<0.5?'винный':'малиновый'}
+  if(h<300)return v<0.45?'баклажановый':(s<0.6&&v<0.7?'сливовый':'фиолетовый');
+  return v<0.42?'сливовый':(s<0.6?'лиловый':'пурпурный')}
 function undertone(hex){const c=h2r(hex);if(isNeutral(hex)){const d=c[0]-c[2];return d>6?'warm':d<-6?'cool':'neutral'}
   const a=toRyb(hsv(c).h);return(a>=345||a<150)?'warm':a<210?'neutral':'cool'}
-const TONE={warm:'тёплый',cool:'холодный',neutral:'нейтральный'};
+const TONE={warm:'тёплый',cool:'холодный',neutral:'нейтральный'},TONE_PL={warm:'тёплые',cool:'холодные',neutral:'нейтральные'};
 
 // ===== роли =====
 const ROLES=[{id:'jacket',name:'Пиджак / жакет'},{id:'coat',name:'Пальто'},{id:'top',name:'Рубашка / блуза'},{id:'knit',name:'Свитер / водолазка'},{id:'bottom',name:'Брюки / юбка'}];
@@ -304,7 +310,7 @@ function load(k){try{return localStorage.getItem(k)}catch(e){return null}}
 const gCache={};
 const FAB_OF={top:'top',knit:'knit',bottom:'bottom',shoes:'leather',bag:'leather'},fab={};
 const FABNAME={top:'хлопок для рубашки',knit:'трикотаж для водолазки',bottom:'костюмная ткань для брюк',shoes:'кожа для обуви',bag:'кожа для сумки'};
-function garment(t,hex){const key=t+'|'+hex+(custom[t]?'c':fab[FAB_OF[t]]?'f':'');return gCache[key]||(gCache[key]=recolor(custom[t]||fab[FAB_OF[t]]||buildMap(t),hex))}
+function garment(t,hex){if(Object.keys(gCache).length>70)Object.keys(gCache).forEach(k=>delete gCache[k]);const key=t+'|'+hex+(custom[t]?'c':fab[FAB_OF[t]]?'f':'');return gCache[key]||(gCache[key]=recolor(custom[t]||fab[FAB_OF[t]]||buildMap(t),hex))}
 function loadFabrics(done){const ks=Object.keys(FAB_OF).map(k=>FAB_OF[k]).filter((v,i,a)=>a.indexOf(v)===i);let left=ks.length;
   ks.forEach(k=>{const li=new Image(),mi=new Image();let n=0;const go=()=>{if(++n<2)return;const w=li.width,h=li.height,c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');
     x.drawImage(li,0,0);const d=x.getImageData(0,0,w,h).data;x.clearRect(0,0,w,h);x.drawImage(mi,0,0,w,h);const m=x.getImageData(0,0,w,h).data,L=new Float32Array(w*h),a=new Uint8ClampedArray(w*h);
@@ -422,7 +428,18 @@ function verdict(hex){const main=item.color,tone=undertone(main),anchors=item.ac
     else{tag='Контраст';why=`Стоит напротив цвета (${nm}) на круге. Самый яркий контраст. Остальные вещи образа лучше оставить спокойными.`}}
   const ct=undertone(hex);if(tone!=='neutral'&&ct!=='neutral'&&ct!==tone)why+=` Подтон цвета ${TONE[ct]}, а у вещи ${TONE[tone]}, поэтому выбирай приглушённый вариант этого цвета.`;
   return{hex,tag,why,focus,name:nameOf(hex),any:true}}
-let anyRec=null;
+let anyRec=null,adj={l:0,s:0,t:0},adjFor=null,heroCur=null;
+function applyAdj(hex){const c=hsv(h2r(hex));let h=c.h;if(adj.t)h=shiftHue(h,adj.t>0?55:235,Math.abs(adj.t)*30);
+  return fromHsv(h,Math.max(0,Math.min(1,c.s*(1+adj.s*.9))),Math.max(.06,Math.min(1,c.v+adj.l*.35)))}
+function drawHero(){const cur=heroCur;if(!cur)return;const hx=applyAdj(cur.hex),nm=nameOf(hx),changed=adj.l||adj.s||adj.t;
+  drawBoard(document.getElementById('heroBoard'),hx);drawCompare(document.getElementById('heroCmp'),Object.assign({},cur,{hex:hx}));
+  document.getElementById('heroName').textContent=nm;document.getElementById('heroCap').textContent=nm;
+  document.getElementById('heroHex').textContent=`${FABNAME[target]} · ${hx.toUpperCase()}`;
+  const parts=[];if(adj.l)parts.push(adj.l>0?'светлее':'темнее');if(adj.s)parts.push(adj.s>0?'ярче':'приглушённее');if(adj.t)parts.push(adj.t>0?'теплее':'холоднее');
+  document.getElementById('adjNote').textContent=changed?`Оттенок изменён: ${parts.join(', ')}. Исходный: ${cur.name}.`:'Двигай ползунки, если предложенный оттенок слишком яркий, тёмный или холодный.';
+  document.getElementById('adjReset').hidden=!changed}
+document.addEventListener('input',e=>{const k=e.target.dataset&&e.target.dataset.k;if(!k||!e.target.closest('.adjs'))return;adj[k]=+e.target.value;drawHero()});
+document.addEventListener('click',e=>{if(e.target.id!=='adjReset')return;adj={l:0,s:0,t:0};['adjL','adjS','adjT'].forEach(id=>document.getElementById(id).value=0);drawHero()});
 const SCHEMES=[
  {id:'mono',name:'Монохром',off:[0],text:'Один оттенок разной светлоты. Самая спокойная схема: образ читается цельным.'},
  {id:'analog',name:'Аналоговая',off:[-30,30],text:'Основа и её соседи по кругу. Мягкий переход без резкого контраста.'},
@@ -513,16 +530,18 @@ function renderAll(){
   chips(document.getElementById('schemeChips'),SCHEMES,schemeId,id=>{schemeId=id;selected=null;renderAll()});
   document.getElementById('schemeText').textContent=SCHEMES.find(x=>x.id===schemeId).text;
   chips(document.getElementById('tempChips'),[{id:'auto',name:'Под подтон вещи'},{id:'warm',name:'Тёплые'},{id:'cool',name:'Холодные'}],tempMode,id=>{tempMode=id;selected=null;renderAll()});
-  document.getElementById('tempText').textContent=`Сейчас ${TONE[st.temp]} оттенки${tempMode==='auto'?`: у вещи ${TONE[undertone(item.color)]} подтон`:''}. Тёплый оттенок цвета содержит желтизну, холодный — синеву: тёплый красный ближе к томатному, холодный к малиновому.`;
+  document.getElementById('tempText').textContent=`Сейчас ${TONE_PL[st.temp]} оттенки${tempMode==='auto'?`: у вещи ${TONE[undertone(item.color)]} подтон`:''}. Тёплый оттенок цвета содержит желтизну, холодный — синеву: тёплый красный ближе к томатному, холодный к малиновому.`;
   drawWheel(st);
   document.getElementById('schemeTitle').textContent=st.sch?`Цвета схемы: ${st.sch.name.toLowerCase()}`:'Цвета схемы';
   const sh=document.getElementById('schemeCards');sh.innerHTML=srecs.length?srecs.map(r=>`<button type="button" class="rec" data-hex="${r.hex}" aria-pressed="${r.hex===selected}"><canvas class="board" width="520" height="260"></canvas><span class="tag">${r.tag}</span><b>${r.name}</b><small class="mono" style="padding-inline:4px">${FABNAME[target]}</small><p>${r.why}</p></button>`).join(''):'<p class="hint">Выбери основу, чтобы увидеть цвета схемы.</p>';
   sh.querySelectorAll('.rec').forEach((c,i)=>drawCompare(c.querySelector('canvas'),srecs[i]));
   sh.onclick=e=>{const c=e.target.closest('.rec');if(!c)return;selected=c.dataset.hex;anyRec=null;renderAll();document.getElementById('heroBoard').scrollIntoView({behavior:'smooth',block:'center'})};
-  if(cur){drawBoard(document.getElementById('heroBoard'),cur.hex);
-    document.getElementById('heroText').innerHTML=`<span class="tag">${cur.any?'Проверка · ':''}${cur.tag}</span><span class="big">${cur.name}</span><span class="mono">${FABNAME[target]} · ${cur.hex.toUpperCase()}</span><p>${cur.why}</p>
-      <canvas class="board" id="heroCmp" width="640" height="320" aria-label="Вещь крупно рядом с тканью"></canvas><div class="cap"><span>твоя вещь крупно</span><span>${cur.name}</span></div>`;
-    drawCompare(document.getElementById('heroCmp'),cur)}
+  if(cur){if(adjFor!==cur.hex+target){adj={l:0,s:0,t:0};adjFor=cur.hex+target}heroCur=cur;
+    const sl=(id,k,a,b)=>`<label class="adj"><span>${a}</span><input type="range" id="${id}" data-k="${k}" min="-1" max="1" step="0.05" value="${adj[k]}" aria-label="${a} — ${b}"><span>${b}</span></label>`;
+    document.getElementById('heroText').innerHTML=`<span class="tag">${cur.any?'Проверка · ':''}${cur.tag}</span><span class="big" id="heroName"></span><span class="mono" id="heroHex"></span><p>${cur.why}</p>
+      <div class="adjs"><h3>Подкорректировать оттенок</h3>${sl('adjL','l','темнее','светлее')}${sl('adjS','s','приглушённее','ярче')}${sl('adjT','t','холоднее','теплее')}<div class="row"><span class="hint" id="adjNote"></span><button type="button" class="btn ghost" id="adjReset">Сбросить</button></div></div>
+      <canvas class="board" id="heroCmp" width="640" height="320" aria-label="Вещь крупно рядом с тканью"></canvas><div class="cap"><span>твоя вещь крупно</span><span id="heroCap"></span></div>`;
+    drawHero()}
   const host=document.getElementById('recs');host.innerHTML=recs.map(r=>`<button type="button" class="rec" data-hex="${r.hex}" aria-pressed="${r.hex===selected}"><canvas class="board" width="520" height="260"></canvas><span class="tag">${r.tag}</span><b>${r.name}</b><small class="mono" style="padding-inline:4px">${FABNAME[target]}</small><p>${r.why}</p></button>`).join('');
   host.querySelectorAll('.rec').forEach((c,i)=>drawCompare(c.querySelector('canvas'),recs[i]));
   host.onclick=e=>{const c=e.target.closest('.rec');if(!c)return;selected=c.dataset.hex;renderAll();document.getElementById('heroBoard').scrollIntoView({behavior:'smooth',block:'center'})};
