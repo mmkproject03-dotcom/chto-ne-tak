@@ -81,7 +81,7 @@ label.chk{display:flex;gap:8px;align-items:center;font-size:14px;cursor:pointer}
 .anyc:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .wheel-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:center}
 @media (max-width:840px){.wheel-grid{grid-template-columns:1fr}}
-#wheel{width:100%;max-width:520px;height:auto;justify-self:center;cursor:pointer;touch-action:manipulation}
+#wheel{width:100%;max-width:520px;height:auto;justify-self:center;cursor:grab;touch-action:none}
 .wheel-ctl{display:flex;flex-direction:column;min-width:0}
 .adjs{display:flex;flex-direction:column;gap:8px;padding-block:10px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 .adj{display:grid;grid-template-columns:7.5em minmax(0,1fr) 5.5em;gap:10px;align-items:center;font-size:13px;color:var(--muted)}
@@ -160,6 +160,7 @@ label.chk{display:flex;gap:8px;align-items:center;font-size:14px;cursor:pointer}
       <div class="wheel-ctl">
         <div class="pass" style="border-top:0;padding-top:0"><h3>Строим от</h3><div class="row" id="baseChips"></div><p class="hint" id="baseHint"></p></div>
         <div class="pass"><h3>Схема</h3><div class="row" id="schemeChips"></div><p class="advice" id="schemeText"></p></div>
+        <div class="pass"><h3>Вращение схемы</h3><p class="hint" id="rotInfo"></p><button type="button" class="btn ghost" id="rotReset" style="align-self:flex-start" hidden>Вернуть к основе</button></div>
         <div class="pass"><h3>Оттенки</h3><div class="row" id="tempChips"></div><p class="hint" id="tempText"></p></div>
         <div class="pass"><h3>Проверить цвет</h3><p class="hint">Коснись любого сектора круга или выбери свой цвет, и приложение объяснит, как он сочетается с вещью.</p><div class="row"><input type="color" id="anyPick" value="#8a2b2b" aria-label="Свой цвет для проверки"></div></div>
       </div>
@@ -433,7 +434,8 @@ function fitZone(c,b){if(isNeutral(c))return 'N';const C=hsv(h2r(c)),B=hsv(h2r(b
   if(Math.abs(C.v-B.v)<=.22&&Math.abs(C.s-B.s)<=.3)return 'A';
   if(C.v>=.75&&C.s<=.35)return 'B';
   if(C.v<B.v-.22&&C.v>=.16&&C.s<=B.s+.2)return 'C';return null}
-const ZONE={A:'Той же глубины и чистоты, что основа: цвета не спорят по яркости.',B:'Светлый приглушённый вариант: мягкий контраст по светлоте, яркость не перебивает основу.',C:'Глубже основы: насыщенный тёмный вариант, сочетание выглядит спокойно и дорого.'};
+const angDiff=(a,b)=>{const d=Math.abs(a-b)%360;return d>180?360-d:d};
+const ZONE={N:'Почти нейтральный оттенок: работает как мягкая база.',A:'Той же глубины и чистоты, что основа: цвета не спорят по яркости.',B:'Светлый приглушённый вариант: мягкий контраст по светлоте, яркость не перебивает основу.',C:'Глубже основы: насыщенный тёмный вариант, сочетание выглядит спокойно и дорого.'};
 const PSCH=[{id:'mono',name:'Монохром',offs:[0],t:'тот же оттенок, что у основы'},{id:'analog',name:'Аналоговая',offs:[-30,30],t:'сосед основы по кругу'},{id:'compl',name:'Комплементарная',offs:[180],t:'напротив основы на круге'},{id:'split',name:'Расщеплённая',offs:[150,210],t:'сосед противоположного цвета'},{id:'triad',name:'Триада',offs:[120,240],t:'треть круга от основы'}];
 const NEUT={warm:[['#f2ead9','молочный'],['#e2d1b5','светло-бежевый'],['#b8986f','кэмел'],['#8a8178','тёплый серый'],['#6b4a33','шоколадный'],['#2e2722','тёмный шоколад']],
  cool:[['#f7f7f5','белый'],['#d9dadc','светло-серый'],['#8d9096','серый'],['#3b3e44','графит'],['#1d1e22','чёрный'],['#24304a','тёмно-синий']],
@@ -443,17 +445,18 @@ function palette(){const L=anchorList(),base=L.find(b=>b.id===baseId)||L[0]||nul
   groups.push({id:'n',title:'Нейтральные',text:`База под ${TONE[tone]} подтон вещи.`,items:NEUT[tone].map(([hex,name])=>({hex,name,tag:'Нейтральная база',why:`Нейтральный цвет под ${TONE[tone]} подтон вещи. Работает как база: главными остаются вещь и её детали.`}))});
   const det=item.accents.map((a,i)=>({hex:a.hex,name:nameOf(a.hex),tag:'Из деталей',focus:[a.x,a.y],why:`Повторяет цвет детали №${i+1}. Деталь и ${tAcc} перекликаются, поэтому образ выглядит собранным.`}));
   if(det.length)groups.push({id:'d',title:'Из деталей',text:'Точные цвета деталей вещи.',items:det});
-  if(base){const B=hsv(h2r(base.hex)),A=toRyb(B.h),nm=nameOf(base.hex),cl=(x,a,b)=>Math.max(a,Math.min(b,x));
+  const rot=rotA!=null;
+  if(base||rot){const refHex=base?base.hex:fromHsv(30,.45,.55),B=hsv(h2r(refHex)),A=rot?rotA:toRyb(B.h),nm=base?nameOf(base.hex):'вещь',cl=(x,a,b)=>Math.max(a,Math.min(b,x));
     PSCH.filter(p=>schemeId==='all'||p.id===schemeId).forEach(p=>{const items=[];
-      p.offs.forEach(o=>{const h=o===0?B.h:tShift(fromRyb(A+o),temp,20);
-        const cands=o===0?[[cl(B.s*.3,.08,.3),.94],[B.s*.7,cl((B.v+.94)/2,.5,.9)],[cl(B.s,.2,.9),cl(B.v-.28,.18,.8)]]:[[cl(B.s,.25,.8),cl(B.v,.24,.92)],[.24,.92],[cl(B.s+.05,.25,.85),cl(B.v-.28,.18,.8)]];
-        cands.forEach(([s_,v_])=>{if(o===0&&Math.abs(v_-B.v)<.06)return;const hex=fromHsv(h,s_,v_),z=o===0?(v_>B.v?'B':'C'):fitZone(hex,base.hex);if(!z)return;
-          items.push({hex,name:nameOf(hex),tag:p.name,focus:base.f,zone:z,why:`Схема «${p.name}»: ${p.t} (${nm}). ${o===0?(v_>B.v?'Светлее основы, оттенок тот же.':'Глубже основы, оттенок тот же.'):ZONE[z]}`})})});
-      if(items.length)groups.push({id:p.id,title:p.name,text:p.t[0].toUpperCase()+p.t.slice(1)+` (${nm}).`,items})})}
-  else groups.push({id:'acc',title:'Цветной акцент',text:'Вещь нейтральная, поэтому принимает любой цвет. Отметь цветную деталь, и палитра станет точнее.',
+      (rot&&p.id!=='mono'?[0].concat(p.offs):p.offs).forEach(o=>{const h=(o===0&&!rot)?B.h:tShift(fromRyb(A+o),temp,20);
+        const cands=(o===0&&(!rot||p.id==='mono'))?[[cl(B.s*.3,.08,.3),.94],[B.s*.7,cl((B.v+.94)/2,.5,.9)],[cl(B.s,.2,.9),cl(B.v-.28,.18,.8)]]:[[cl(B.s,.25,.8),cl(B.v,.24,.92)],[.24,.92],[cl(B.s+.05,.25,.85),cl(B.v-.28,.18,.8)]];
+        cands.forEach(([s_,v_])=>{const mono0=o===0&&(!rot||p.id==='mono');if(mono0&&!rot&&Math.abs(v_-B.v)<.06)return;const hex=fromHsv(h,s_,v_),z=mono0?(v_>B.v?'B':'C'):fitZone(hex,refHex);if(!z)return;
+          items.push({hex,name:nameOf(hex),tag:p.name,focus:base.f,zone:z,why:rot?`Схема «${p.name}», повёрнутая по кругу: цвет из точки, где ты её остановила. ${mono0?'Оттенок схемы, другая светлота.':ZONE[z].replace('основа','вещь')}`:`Схема «${p.name}»: ${p.t} (${nm}). ${mono0?(v_>B.v?'Светлее основы, оттенок тот же.':'Глубже основы, оттенок тот же.'):ZONE[z]}`})})});
+      if(items.length)groups.push({id:p.id,title:p.name+(rot?' · повёрнута':''),text:rot?'Цвета из точек схемы там, где ты её остановила. Яркость подстроена под вещь.':p.t[0].toUpperCase()+p.t.slice(1)+` (${nm}).`,items})})}
+  if(!base&&!rot)groups.push({id:'acc',title:'Цветной акцент',text:'Вещь нейтральная, поэтому принимает любой цвет. Отметь цветную деталь, и палитра станет точнее.',
     items:[...Array(12).keys()].map(i=>{const hex=shade(i*30,temp,.42,.55);return{hex,name:nameOf(hex),tag:'Цветной акцент',why:`Нейтральная вещь принимает любой цвет. Взят ${TONE[temp]} приглушённый оттенок под подтон вещи.`}})});
   const seen=[];groups.forEach(g=>g.items=g.items.filter(r=>{if(seen.some(q=>dist(q,r.hex)<12))return false;seen.push(r.hex);return true}));
-  const gs=groups.filter(g=>g.items.length);return{groups:gs,flat:gs.flatMap(g=>g.items),base,temp,sch}}
+  const gs=groups.filter(g=>g.items.length);return{groups:gs,flat:gs.flatMap(g=>g.items),base,temp,sch,A:rotA}}
 function verdict2(hex){const L=anchorList(),base=L.find(b=>b.id===baseId)||L[0],v=verdict(hex);if(!base||isNeutral(hex))return v;
   const z=fitZone(hex,base.hex);if(z){v.why+=' '+ZONE[z];return v}
   const C=hsv(h2r(hex)),B=hsv(h2r(base.hex)),d=x=>x.v<.45?'глубокий и тёмный':x.v<.7?'средней светлоты':'светлый',q=x=>x.s>.55?'яркий и чистый':x.s>.3?'умеренно насыщенный':'приглушённый';
@@ -478,7 +481,7 @@ const SCHEMES=[
  {id:'split',name:'Расщеплённая',off:[150,210],text:'Основа и два соседа её противоположности. Контраст мягче, чем у прямой пары, и сочетание проще носить.'},
  {id:'triad',name:'Триада',off:[120,240],text:'Три цвета на равном расстоянии по кругу. Ярко, но гармонично: один цвет главный (около 60%), второй поддерживает (30%), третий акцентом (10%).'},
  {id:'square',name:'Квадрат',off:[90,180,270],text:'Четыре цвета через равные промежутки. Самая сложная схема: держится на нейтральной базе и разной доле цветов.'}];
-let schemeId='all',tempMode='auto',baseId=null;
+let rotA=null,schemeId='all',tempMode='auto',baseId=null;
 function shiftHue(h,toward,step){let d=((toward-h+540)%360)-180;if(Math.abs(d)<3)d=toward===240?-1:1;return(h+Math.sign(d)*Math.min(step,Math.abs(d))+360)%360}
 function tShift(h,t,st){const dir=(h>=50&&h<250)?-1:1;return(h+(t==='warm'?dir:-dir)*st+360)%360}
 function shade(a,temp,s,v){const h=fromRyb(a);return fromHsv(tShift(h,temp,20),s,v)}
@@ -511,18 +514,27 @@ function drawWheel(state){const cv=document.getElementById('wheel'),x=cv.getCont
   // цвета деталей вещи
   item.accents.forEach((a,i)=>{if(isNeutral(a.hex))return;const t=undertone(a.hex)==='cool'?'cool':'warm',[px,py]=pos(toRyb(hsv(h2r(a.hex)).h),t);
     x.beginPath();x.arc(px,py,W*.018,0,7);x.fillStyle=a.hex;x.fill();x.lineWidth=2;x.strokeStyle=ink;x.stroke()});
-  if(!state.base)return;
-  const A=toRyb(hsv(h2r(state.base.hex)).h),pts=[0].concat(state.sch.id==='mono'?[]:state.sch.off).map(o=>pos(A+o,state.temp));
+  if(!state.base&&state.A==null)return;
+  const A=state.A!=null?state.A:toRyb(hsv(h2r(state.base.hex)).h),pts=[0].concat(state.sch.id==='mono'?[]:state.sch.off).map(o=>pos(A+o,state.temp));
   if(pts.length>1){x.beginPath();pts.forEach((p,i)=>i?x.lineTo(p[0],p[1]):x.moveTo(p[0],p[1]));if(pts.length>2)x.closePath();x.lineWidth=5;x.strokeStyle=bg;x.stroke();x.lineWidth=2;x.strokeStyle=ink;x.setLineDash([8,6]);x.stroke();x.setLineDash([])}
   pts.forEach((p,i)=>{x.beginPath();x.arc(p[0],p[1],i?W*.028:W*.036,0,7);x.lineWidth=i?4:6;x.strokeStyle=bg;x.stroke();x.lineWidth=2;x.strokeStyle=ink;x.stroke();
-    if(!i){x.fillStyle=ink;x.font=`600 ${W*.022}px ${css('--body')}`;x.textAlign='center';x.lineWidth=4;x.strokeStyle=bg;x.strokeText('основа',p[0],p[1]-W*.05);x.fillText('основа',p[0],p[1]-W*.05)}});
+    if(!i){x.fillStyle=ink;x.font=`600 ${W*.022}px ${css('--body')}`;x.textAlign='center';x.lineWidth=4;x.strokeStyle=bg;const lb=state.A!=null?'тяни':'основа';x.strokeText(lb,p[0],p[1]-W*.05);x.fillText(lb,p[0],p[1]-W*.05)}});
   (state.marks||[]).forEach(m=>{const t=undertone(m)==='cool'?'cool':state.temp,[px,py]=pos(toRyb(hsv(h2r(m)).h),state.temp);x.beginPath();x.arc(px,py,W*.014,0,7);x.fillStyle=m;x.fill();x.lineWidth=3;x.strokeStyle=bg;x.stroke();x.lineWidth=1.5;x.strokeStyle=ink;x.stroke()});
   if(state.sel&&!isNeutral(state.sel)){const[px,py]=pos(toRyb(hsv(h2r(state.sel)).h),state.temp);x.beginPath();x.arc(px,py,W*.04,0,7);x.lineWidth=4;x.strokeStyle=css('--accent');x.stroke()}}
-document.getElementById('wheel').addEventListener('click',e=>{const cv=e.currentTarget,r=cv.getBoundingClientRect(),c=cv.width/2,x=(e.clientX-r.left)/r.width*cv.width-c,y=(e.clientY-r.top)/r.height*cv.height-c,d=Math.hypot(x,y);
-  if(d<c*.4||d>c*.9)return;const t=d>=c*.655?'warm':'cool';let ang=Math.atan2(y,x)*180/Math.PI+90;ang=(ang+360)%360;const k=Math.round(ang/30)%12,prof=PROFILE[target];
+const wheelEl=document.getElementById('wheel');let wDown=null,wDrag=false,dragOff=0,rafPending=false;
+function wheelPt(e){const r=wheelEl.getBoundingClientRect(),c=wheelEl.width/2,x=(e.clientX-r.left)/r.width*wheelEl.width-c,y=(e.clientY-r.top)/r.height*wheelEl.height-c;return{x,y,d:Math.hypot(x,y),ang:(Math.atan2(y,x)*180/Math.PI+90+360)%360,c}}
+function curSchemeA(){if(rotA!=null)return rotA;const L=anchorList(),b=L.find(q=>q.id===baseId)||L[0];return b?toRyb(hsv(h2r(b.hex)).h):0}
+wheelEl.addEventListener('pointerdown',e=>{const p=wheelPt(e);if(p.d<p.c*.38||p.d>p.c*.97)return;wDown=p;wDrag=false;dragOff=curSchemeA()-p.ang;try{wheelEl.setPointerCapture(e.pointerId)}catch(_){}});
+wheelEl.addEventListener('pointermove',e=>{if(!wDown)return;const p=wheelPt(e);if(!wDrag&&Math.hypot(p.x-wDown.x,p.y-wDown.y)<wheelEl.width*.03)return;
+  if(!wDrag){wDrag=true;if(schemeId==='all')schemeId='triad'}rotA=((Math.round((p.ang+dragOff)/5)*5)%360+360)%360;selected=null;anyRec=null;
+  if(!rafPending){rafPending=true;requestAnimationFrame(()=>{rafPending=false;renderAll()})}});
+wheelEl.addEventListener('pointerup',e=>{if(!wDown)return;const p=wDown,was=wDrag;wDown=null;wDrag=false;if(was)return;
+  if(p.d<p.c*.4||p.d>p.c*.9)return;const t=p.d>=p.c*.655?'warm':'cool',k=Math.round(p.ang/30)%12,prof=PROFILE[target];
   const hex=shade(k*30,t,Math.min(.46,prof.s*1.1),Math.max(.4,prof.v*.8));
-  if(!anchorList().length){customBase=hex;baseId='custom';selected=null;renderAll();return}
+  if(!anchorList().length&&rotA==null){customBase=hex;baseId='custom';selected=null;renderAll();return}
   anyRec=verdict2(hex);selected=hex;renderAll();document.getElementById('heroBoard').scrollIntoView({behavior:'smooth',block:'center'})});
+wheelEl.addEventListener('pointercancel',()=>{wDown=null;wDrag=false});
+document.addEventListener('click',e=>{if(e.target.id!=='rotReset')return;rotA=null;selected=null;anyRec=null;renderAll()});
 
 // ===== доски =====
 function fit(src,bw,bh){const s=Math.min(bw/src.width,bh/src.height);return[src.width*s,src.height*s]}
@@ -560,13 +572,19 @@ function renderAll(){
   const P=palette(),pool=P.flat.concat(anyRec?[anyRec]:[]);
   if(!selected||!pool.some(r=>r.hex===selected))selected=(P.flat.find(r=>r.tag!=='Нейтральная база'&&r.tag!=='Из деталей')||P.flat[0]||{}).hex||null;
   const cur=pool.find(r=>r.hex===selected),T=TARGETS.find(t=>t.id===target),L=anchorList();
-  chips(document.getElementById('baseChips'),L.map(b=>({id:b.id,name:`${b.label}: ${nameOf(b.hex)}`})),P.base&&P.base.id,id=>{baseId=id;selected=null;anyRec=null;renderAll()});
+  chips(document.getElementById('baseChips'),L.map(b=>({id:b.id,name:`${b.label}: ${nameOf(b.hex)}`})),P.base&&P.base.id,id=>{baseId=id;rotA=null;selected=null;anyRec=null;renderAll()});
   document.getElementById('baseHint').textContent=L.length?'Основа ставится на круг, а палитра строится от неё: и по оттенку, и по яркости.':'Вещь и детали нейтральные. Коснись сектора круга, чтобы выбрать цвет, от которого строить палитру, или отметь цветную деталь на фото.';
   chips(document.getElementById('schemeChips'),[{id:'all',name:'Все схемы'}].concat(SCHEMES.filter(x=>x.id!=='square')),schemeId,id=>{schemeId=id;selected=null;anyRec=null;renderAll()});
-  document.getElementById('schemeText').textContent=schemeId==='all'?'Показаны цвета всех схем сразу. Выбери схему, чтобы оставить в палитре только её.':SCHEMES.find(x=>x.id===schemeId).text;
+  document.getElementById('schemeText').textContent=schemeId==='all'?'Показаны цвета всех схем сразу. Выбери схему, чтобы оставить в палитре только её и вращать по кругу.':SCHEMES.find(x=>x.id===schemeId).text;
   chips(document.getElementById('tempChips'),[{id:'auto',name:'Под подтон вещи'},{id:'warm',name:'Тёплые'},{id:'cool',name:'Холодные'}],tempMode,id=>{tempMode=id;selected=null;renderAll()});
   document.getElementById('tempText').textContent=`Сейчас ${TONE_PL[P.temp]} оттенки${tempMode==='auto'?`: у вещи ${TONE[undertone(item.color)]} подтон`:''}. Тёплый оттенок цвета содержит желтизну, холодный — синеву. В монохроме оттенок основы не меняется.`;
-  drawWheel({base:P.base,temp:P.temp,sch:P.sch,marks:P.flat.filter(r=>!isNeutral(r.hex)&&r.tag!=='Из деталей').map(r=>r.hex),sel:selected});
+  {const rot=rotA!=null,el=document.getElementById('rotInfo');document.getElementById('rotReset').hidden=!rot;
+    if(!rot)el.textContent='Потяни схему пальцем по кругу: палитра под фото будет меняться там, где ты её остановишь.';
+    else{const sch=SCHEMES.find(x=>x.id===schemeId)||SCHEMES[0],pts=[0].concat(sch.id==='mono'?[]:sch.off).map(o=>(rotA+o)%360),hit=[];
+      if(item.color&&!isNeutral(item.color))hit.push(['вещь',item.color]);item.accents.forEach((a,i)=>{if(!isNeutral(a.hex))hit.push(['деталь '+(i+1)+' ('+nameOf(a.hex)+')',a.hex])});
+      const ins=hit.filter(([,hx])=>pts.some(q=>angDiff(q,toRyb(hsv(h2r(hx)).h))<=15)).map(([n])=>n);
+      el.textContent=ins.length?`В схему попадает: ${ins.join(', ')}. Сочетание связано с вещью.`:(hit.length?'Вещь и её цветные детали в эту схему не попадают: это сочетание само по себе, а вещь в нём как нейтральный фон.':'Вещь нейтральная, поэтому подходит к схеме в любом положении.')}}
+  drawWheel({base:P.base,A:P.A,temp:P.temp,sch:P.sch,marks:P.flat.filter(r=>!isNeutral(r.hex)&&r.tag!=='Из деталей').map(r=>r.hex),sel:selected});
   const pal=document.getElementById('palette');pal.innerHTML=P.groups.map(g=>`<div class="pgroup"><h3>${g.title}</h3><p class="hint">${g.text}</p><div class="sws">${g.items.map(r=>`<button type="button" class="swc" data-hex="${r.hex}" style="background:${r.hex}" aria-label="${r.name}" title="${r.name}" aria-pressed="${r.hex===selected}"></button>`).join('')}</div></div>`).join('');
   pal.onclick=e=>{const b=e.target.closest('.swc');if(!b)return;selected=b.dataset.hex;anyRec=null;renderAll();document.getElementById('heroBoard').scrollIntoView({behavior:'smooth',block:'nearest'})};
   if(cur){if(adjFor!==cur.hex+target){adj={l:0,s:0,t:0};adjFor=cur.hex+target}heroCur=cur;
