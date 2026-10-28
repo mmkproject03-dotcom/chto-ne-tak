@@ -207,7 +207,7 @@ function nameOf(hex){const{h,s,v}=hsv(h2r(hex));
   if(h>=328&&h<348)return v<0.5?'винный':(s<0.55?'пыльно-розовый':(s>0.75&&v>0.7?'фуксия':'малиновый'));
   if(a<20||a>=345)return v<0.5?'бордовый':(s<0.65&&v<0.78?'кирпичный':'красный');
   if(a<45&&v>=0.45&&v<0.82&&s<0.7)return 'терракотовый';
-  if(a<75)return v<0.45?'коричневый':(v<0.62?'рыжий':(s<0.6?'карамельный':'оранжевый'));
+  if(a<75)return v<0.32?'тёмно-коричневый':v<0.45?'коричневый':(v<0.62?'рыжий':(s<0.6?'карамельный':'оранжевый'));
   if(a<135)return v<0.6?'оливковый':'горчичный';
   if(a>=135&&a<195&&s<0.35&&v>=0.6)return 'шалфей';
   if(a<195&&s<0.6&&v<0.7)return 'оливково-зелёный';
@@ -459,8 +459,9 @@ function schemeRecs(){const L=anchorList();let base=L.find(b=>b.id===baseId)||L[
   const temp=resolveTemp(base),prof=PROFILE[target],A=toRyb(hsv(h2r(base.hex)).h),sch=SCHEMES.find(x=>x.id===schemeId),nm=nameOf(base.hex);
   const S=Math.min(.42,prof.s*1.05),V=Math.max(.4,prof.v*.8),tw=TONE[temp]+(temp==='warm'?' (с желтизной)':' (с синевой)');
   let list=[];
-  if(sch.id==='mono'){[[.9,.25],[.68,.45],[.42,.5]].forEach(([v,sm],i)=>{const hex=shade(A,temp,Math.min(.75,hsv(h2r(base.hex)).s*.6+sm*.4),v);
-      list.push({hex,tag:'Монохром',focus:base.f,off:0,why:`Тот же оттенок, что у основы (${nm}), ${i===0?'светлее':i===1?'средней светлоты':'глубже'}. Цельно и спокойно, одна цветовая вертикаль визуально вытягивает силуэт.`})})}
+  if(sch.id==='mono'){const bc=hsv(h2r(base.hex)),lv=[.97,.86,.74,.62,.5,.38,.26].filter(v=>Math.abs(v-bc.v)>.1),up=lv.filter(v=>v>bc.v),dn=lv.filter(v=>v<bc.v),pick=(bc.v>=.55?[up[0],dn[0],dn[dn.length-1]]:[up[0],up[up.length-1],dn[dn.length-1]]).filter((v,i,a)=>v!==undefined&&a.indexOf(v)===i);
+    pick.forEach(v=>{const sat=v>.82?bc.s*.35:v>.6?bc.s*.7:Math.min(1,bc.s),hex=fromHsv(bc.h,sat,v),d=v-bc.v;
+      list.push({hex,tag:'Монохром',focus:base.f,off:0,why:`Тот же оттенок, что у основы (${nm}), только ${d>.25?'намного светлее':d>0?'светлее':d<-.25?'намного глубже':'глубже'}. Оттенок не меняется, меняется только светлота, поэтому образ читается цельным, а одна цветовая вертикаль визуально вытягивает силуэт.`})})}
   else sch.off.forEach(o=>{const hex=shade(A+o,temp,S,V),role=o===180?'напротив основы':Math.abs(o)===30?'сосед основы':o===90||o===270?'четверть круга от основы':o===150||o===210?'сосед противоположного цвета':'треть круга от основы';
     list.push({hex,tag:sch.name,focus:base.f,off:o,why:`Схема «${sch.name}»: этот цвет — ${role} (${nm}). Взят ${tw} оттенок: ${tempMode==='auto'?'под подтон вещи':'так ты выбрала'}.`})});
   list.forEach(r=>r.name=nameOf(r.hex));return{list,base,temp,sch}}
@@ -530,7 +531,7 @@ function renderAll(){
   chips(document.getElementById('schemeChips'),SCHEMES,schemeId,id=>{schemeId=id;selected=null;renderAll()});
   document.getElementById('schemeText').textContent=SCHEMES.find(x=>x.id===schemeId).text;
   chips(document.getElementById('tempChips'),[{id:'auto',name:'Под подтон вещи'},{id:'warm',name:'Тёплые'},{id:'cool',name:'Холодные'}],tempMode,id=>{tempMode=id;selected=null;renderAll()});
-  document.getElementById('tempText').textContent=`Сейчас ${TONE_PL[st.temp]} оттенки${tempMode==='auto'?`: у вещи ${TONE[undertone(item.color)]} подтон`:''}. Тёплый оттенок цвета содержит желтизну, холодный — синеву: тёплый красный ближе к томатному, холодный к малиновому.`;
+  document.getElementById('tempText').textContent=schemeId==='mono'?'В монохроме оттенок основы не меняется, поэтому тёплые и холодные оттенки здесь не применяются.':`Сейчас ${TONE_PL[st.temp]} оттенки${tempMode==='auto'?`: у вещи ${TONE[undertone(item.color)]} подтон`:''}. Тёплый оттенок цвета содержит желтизну, холодный — синеву: тёплый красный ближе к томатному, холодный к малиновому.`;
   drawWheel(st);
   document.getElementById('schemeTitle').textContent=st.sch?`Цвета схемы: ${st.sch.name.toLowerCase()}`:'Цвета схемы';
   const sh=document.getElementById('schemeCards');sh.innerHTML=srecs.length?srecs.map(r=>`<button type="button" class="rec" data-hex="${r.hex}" aria-pressed="${r.hex===selected}"><canvas class="board" width="520" height="260"></canvas><span class="tag">${r.tag}</span><b>${r.name}</b><small class="mono" style="padding-inline:4px">${FABNAME[target]}</small><p>${r.why}</p></button>`).join(''):'<p class="hint">Выбери основу, чтобы увидеть цвета схемы.</p>';
