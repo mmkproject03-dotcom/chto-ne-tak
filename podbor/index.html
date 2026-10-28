@@ -87,6 +87,14 @@ label.chk{display:flex;gap:8px;align-items:center;font-size:14px;cursor:pointer}
 .adj{display:grid;grid-template-columns:7.5em minmax(0,1fr) 5.5em;gap:10px;align-items:center;font-size:13px;color:var(--muted)}
 .adj span:last-child{text-align:right}
 .adj input{width:100%;accent-color:var(--accent)}
+.hero-left{display:flex;flex-direction:column;gap:16px;min-width:0}
+.palette{display:flex;flex-direction:column;gap:14px}
+.pgroup{display:flex;flex-direction:column;gap:6px}
+.pgroup p{margin:0}
+.sws{display:flex;flex-wrap:wrap;gap:8px}
+.swc{width:40px;height:40px;border-radius:50%;border:2px solid var(--surface);box-shadow:0 0 0 1px var(--line);cursor:pointer;padding:0}
+.swc[aria-pressed="true"]{box-shadow:0 0 0 3px var(--accent)}
+.swc:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 .foot{font-size:13px;color:var(--muted);max-width:76ch;margin:0}
 </style>
 </head><body>
@@ -159,19 +167,12 @@ label.chk{display:flex;gap:8px;align-items:center;font-size:14px;cursor:pointer}
   </section>
 
   <section class="hero">
-    <canvas class="board" id="heroBoard" width="1040" height="760" aria-label="Вещь и подобранная вещь рядом"></canvas>
+    <div class="hero-left">
+      <canvas class="board" id="heroBoard" width="1040" height="760" aria-label="Вещь и ткань выбранного цвета рядом"></canvas>
+      <div class="pal-head"><h2>Палитра к вещи</h2><p class="hint">Все цвета, которые подходят к основе и по кругу, и по яркости. Нажми на кружок, чтобы увидеть ткань рядом с вещью.</p></div>
+      <div id="palette" class="palette"></div>
+    </div>
     <div class="hero-text" id="heroText"></div>
-  </section>
-
-
-  <section class="wrap" style="gap:14px">
-    <div><h2 id="schemeTitle">Цвета схемы</h2><p class="hint">Слева кусок твоей вещи крупно, справа ткань подобранного цвета: так цвета видно рядом, как при подборе в ателье.</p></div>
-    <div class="recs" id="schemeCards"></div>
-  </section>
-
-  <section class="wrap" style="gap:14px">
-    <div><h2>Готовые подсказки</h2><p class="hint">Короткие советы стилиста без выбора схемы: повтор деталей, тон в тон, база под подтон.</p></div>
-    <div class="recs" id="recs"></div>
   </section>
 
   <section class="panel">
@@ -428,8 +429,38 @@ function verdict(hex){const main=item.color,tone=undertone(main),anchors=item.ac
     else{tag='Контраст';why=`Стоит напротив цвета (${nm}) на круге. Самый яркий контраст. Остальные вещи образа лучше оставить спокойными.`}}
   const ct=undertone(hex);if(tone!=='neutral'&&ct!=='neutral'&&ct!==tone)why+=` Подтон цвета ${TONE[ct]}, а у вещи ${TONE[tone]}, поэтому выбирай приглушённый вариант этого цвета.`;
   return{hex,tag,why,focus,name:nameOf(hex),any:true}}
+function fitZone(c,b){if(isNeutral(c))return 'N';const C=hsv(h2r(c)),B=hsv(h2r(b));
+  if(Math.abs(C.v-B.v)<=.22&&Math.abs(C.s-B.s)<=.3)return 'A';
+  if(C.v>=.75&&C.s<=.35)return 'B';
+  if(C.v<B.v-.22&&C.v>=.16&&C.s<=B.s+.2)return 'C';return null}
+const ZONE={A:'Той же глубины и чистоты, что основа: цвета не спорят по яркости.',B:'Светлый приглушённый вариант: мягкий контраст по светлоте, яркость не перебивает основу.',C:'Глубже основы: насыщенный тёмный вариант, сочетание выглядит спокойно и дорого.'};
+const PSCH=[{id:'mono',name:'Монохром',offs:[0],t:'тот же оттенок, что у основы'},{id:'analog',name:'Аналоговая',offs:[-30,30],t:'сосед основы по кругу'},{id:'compl',name:'Комплементарная',offs:[180],t:'напротив основы на круге'},{id:'split',name:'Расщеплённая',offs:[150,210],t:'сосед противоположного цвета'},{id:'triad',name:'Триада',offs:[120,240],t:'треть круга от основы'}];
+const NEUT={warm:[['#f2ead9','молочный'],['#e2d1b5','светло-бежевый'],['#b8986f','кэмел'],['#8a8178','тёплый серый'],['#6b4a33','шоколадный'],['#2e2722','тёмный шоколад']],
+ cool:[['#f7f7f5','белый'],['#d9dadc','светло-серый'],['#8d9096','серый'],['#3b3e44','графит'],['#1d1e22','чёрный'],['#24304a','тёмно-синий']],
+ neutral:[['#f5f3ef','белый'],['#ece4d6','молочный'],['#cfcdca','светло-серый'],['#8e8d8b','серый'],['#3a3a3c','графит'],['#1d1d1f','чёрный']]};
+function palette(){const L=anchorList(),base=L.find(b=>b.id===baseId)||L[0]||null;if(base)baseId=base.id;
+  const temp=resolveTemp(base),tone=undertone(item.color||'#888888'),groups=[],sch=schemeId==='all'?{id:'all',off:[]}:SCHEMES.find(x=>x.id===schemeId),tAcc=TARGETS.find(t=>t.id===target).acc;
+  groups.push({id:'n',title:'Нейтральные',text:`База под ${TONE[tone]} подтон вещи.`,items:NEUT[tone].map(([hex,name])=>({hex,name,tag:'Нейтральная база',why:`Нейтральный цвет под ${TONE[tone]} подтон вещи. Работает как база: главными остаются вещь и её детали.`}))});
+  const det=item.accents.map((a,i)=>({hex:a.hex,name:nameOf(a.hex),tag:'Из деталей',focus:[a.x,a.y],why:`Повторяет цвет детали №${i+1}. Деталь и ${tAcc} перекликаются, поэтому образ выглядит собранным.`}));
+  if(det.length)groups.push({id:'d',title:'Из деталей',text:'Точные цвета деталей вещи.',items:det});
+  if(base){const B=hsv(h2r(base.hex)),A=toRyb(B.h),nm=nameOf(base.hex),cl=(x,a,b)=>Math.max(a,Math.min(b,x));
+    PSCH.filter(p=>schemeId==='all'||p.id===schemeId).forEach(p=>{const items=[];
+      p.offs.forEach(o=>{const h=o===0?B.h:tShift(fromRyb(A+o),temp,20);
+        const cands=o===0?[[cl(B.s*.3,.08,.3),.94],[B.s*.7,cl((B.v+.94)/2,.5,.9)],[cl(B.s,.2,.9),cl(B.v-.28,.18,.8)]]:[[cl(B.s,.25,.8),cl(B.v,.24,.92)],[.24,.92],[cl(B.s+.05,.25,.85),cl(B.v-.28,.18,.8)]];
+        cands.forEach(([s_,v_])=>{if(o===0&&Math.abs(v_-B.v)<.06)return;const hex=fromHsv(h,s_,v_),z=o===0?(v_>B.v?'B':'C'):fitZone(hex,base.hex);if(!z)return;
+          items.push({hex,name:nameOf(hex),tag:p.name,focus:base.f,zone:z,why:`Схема «${p.name}»: ${p.t} (${nm}). ${o===0?(v_>B.v?'Светлее основы, оттенок тот же.':'Глубже основы, оттенок тот же.'):ZONE[z]}`})})});
+      if(items.length)groups.push({id:p.id,title:p.name,text:p.t[0].toUpperCase()+p.t.slice(1)+` (${nm}).`,items})})}
+  else groups.push({id:'acc',title:'Цветной акцент',text:'Вещь нейтральная, поэтому принимает любой цвет. Отметь цветную деталь, и палитра станет точнее.',
+    items:[...Array(12).keys()].map(i=>{const hex=shade(i*30,temp,.42,.55);return{hex,name:nameOf(hex),tag:'Цветной акцент',why:`Нейтральная вещь принимает любой цвет. Взят ${TONE[temp]} приглушённый оттенок под подтон вещи.`}})});
+  const seen=[];groups.forEach(g=>g.items=g.items.filter(r=>{if(seen.some(q=>dist(q,r.hex)<12))return false;seen.push(r.hex);return true}));
+  const gs=groups.filter(g=>g.items.length);return{groups:gs,flat:gs.flatMap(g=>g.items),base,temp,sch}}
+function verdict2(hex){const L=anchorList(),base=L.find(b=>b.id===baseId)||L[0],v=verdict(hex);if(!base||isNeutral(hex))return v;
+  const z=fitZone(hex,base.hex);if(z){v.why+=' '+ZONE[z];return v}
+  const C=hsv(h2r(hex)),B=hsv(h2r(base.hex)),d=x=>x.v<.45?'глубокий и тёмный':x.v<.7?'средней светлоты':'светлый',q=x=>x.s>.55?'яркий и чистый':x.s>.3?'умеренно насыщенный':'приглушённый';
+  const fix=fromHsv(C.h,Math.max(.25,Math.min(.8,B.s)),Math.max(.24,Math.min(.92,B.v)));
+  return{hex,any:true,tag:'Не подходит по яркости',name:nameOf(hex),focus:v.focus,fix,why:`По кругу это сочетание «${v.tag.toLowerCase()}», но по яркости и глубине оно не работает: основа (${nameOf(base.hex)}) ${d(B)} и ${q(B)}, а этот цвет ${d(C)} и ${q(C)}. Чтобы сочетание сработало, возьми этот цвет той же глубины, что основа (${nameOf(fix)}), или его светлый приглушённый вариант.`}}
 let anyRec=null,adj={l:0,s:0,t:0},adjFor=null,heroCur=null;
-function applyAdj(hex){const c=hsv(h2r(hex));let h=c.h;if(adj.t)h=shiftHue(h,adj.t>0?55:235,Math.abs(adj.t)*30);
+function applyAdj(hex){const c=hsv(h2r(hex));let h=c.h;if(adj.t)h=tShift(h,adj.t>0?'warm':'cool',Math.abs(adj.t)*30);
   return fromHsv(h,Math.max(0,Math.min(1,c.s*(1+adj.s*.9))),Math.max(.06,Math.min(1,c.v+adj.l*.35)))}
 function drawHero(){const cur=heroCur;if(!cur)return;const hx=applyAdj(cur.hex),nm=nameOf(hx),changed=adj.l||adj.s||adj.t;
   drawBoard(document.getElementById('heroBoard'),hx);drawCompare(document.getElementById('heroCmp'),Object.assign({},cur,{hex:hx}));
@@ -439,7 +470,7 @@ function drawHero(){const cur=heroCur;if(!cur)return;const hx=applyAdj(cur.hex),
   document.getElementById('adjNote').textContent=changed?`Оттенок изменён: ${parts.join(', ')}. Исходный: ${cur.name}.`:'Двигай ползунки, если предложенный оттенок слишком яркий, тёмный или холодный.';
   document.getElementById('adjReset').hidden=!changed}
 document.addEventListener('input',e=>{const k=e.target.dataset&&e.target.dataset.k;if(!k||!e.target.closest('.adjs'))return;adj[k]=+e.target.value;drawHero()});
-document.addEventListener('click',e=>{if(e.target.id!=='adjReset')return;adj={l:0,s:0,t:0};['adjL','adjS','adjT'].forEach(id=>document.getElementById(id).value=0);drawHero()});
+document.addEventListener('click',e=>{if(e.target.id==='useFix'){anyRec=verdict2(e.target.dataset.hex);selected=anyRec.hex;renderAll();return}if(e.target.id!=='adjReset')return;adj={l:0,s:0,t:0};['adjL','adjS','adjT'].forEach(id=>document.getElementById(id).value=0);drawHero()});
 const SCHEMES=[
  {id:'mono',name:'Монохром',off:[0],text:'Один оттенок разной светлоты. Самая спокойная схема: образ читается цельным.'},
  {id:'analog',name:'Аналоговая',off:[-30,30],text:'Основа и её соседи по кругу. Мягкий переход без резкого контраста.'},
@@ -447,9 +478,10 @@ const SCHEMES=[
  {id:'split',name:'Расщеплённая',off:[150,210],text:'Основа и два соседа её противоположности. Контраст мягче, чем у прямой пары, и сочетание проще носить.'},
  {id:'triad',name:'Триада',off:[120,240],text:'Три цвета на равном расстоянии по кругу. Ярко, но гармонично: один цвет главный (около 60%), второй поддерживает (30%), третий акцентом (10%).'},
  {id:'square',name:'Квадрат',off:[90,180,270],text:'Четыре цвета через равные промежутки. Самая сложная схема: держится на нейтральной базе и разной доле цветов.'}];
-let schemeId='triad',tempMode='auto',baseId=null;
+let schemeId='all',tempMode='auto',baseId=null;
 function shiftHue(h,toward,step){let d=((toward-h+540)%360)-180;if(Math.abs(d)<3)d=toward===240?-1:1;return(h+Math.sign(d)*Math.min(step,Math.abs(d))+360)%360}
-function shade(a,temp,s,v){const h=fromRyb(a);return fromHsv(temp==='warm'?shiftHue(h,55,20):shiftHue(h,235,18),s,v)}
+function tShift(h,t,st){const dir=(h>=50&&h<250)?-1:1;return(h+(t==='warm'?dir:-dir)*st+360)%360}
+function shade(a,temp,s,v){const h=fromRyb(a);return fromHsv(tShift(h,temp,20),s,v)}
 function anchorList(){const L=[];if(item.color&&!isNeutral(item.color))L.push({id:'main',hex:item.color,label:'Цвет вещи',f:null});
   item.accents.forEach((a,i)=>{if(!isNeutral(a.hex))L.push({id:'a'+i,hex:a.hex,label:'Деталь '+(i+1),f:[a.x,a.y]})});
   if(customBase)L.push({id:'custom',hex:customBase,label:'Свой цвет',f:null});return L}
@@ -483,12 +515,14 @@ function drawWheel(state){const cv=document.getElementById('wheel'),x=cv.getCont
   const A=toRyb(hsv(h2r(state.base.hex)).h),pts=[0].concat(state.sch.id==='mono'?[]:state.sch.off).map(o=>pos(A+o,state.temp));
   if(pts.length>1){x.beginPath();pts.forEach((p,i)=>i?x.lineTo(p[0],p[1]):x.moveTo(p[0],p[1]));if(pts.length>2)x.closePath();x.lineWidth=5;x.strokeStyle=bg;x.stroke();x.lineWidth=2;x.strokeStyle=ink;x.setLineDash([8,6]);x.stroke();x.setLineDash([])}
   pts.forEach((p,i)=>{x.beginPath();x.arc(p[0],p[1],i?W*.028:W*.036,0,7);x.lineWidth=i?4:6;x.strokeStyle=bg;x.stroke();x.lineWidth=2;x.strokeStyle=ink;x.stroke();
-    if(!i){x.fillStyle=ink;x.font=`600 ${W*.022}px ${css('--body')}`;x.textAlign='center';x.lineWidth=4;x.strokeStyle=bg;x.strokeText('основа',p[0],p[1]-W*.05);x.fillText('основа',p[0],p[1]-W*.05)}})}
+    if(!i){x.fillStyle=ink;x.font=`600 ${W*.022}px ${css('--body')}`;x.textAlign='center';x.lineWidth=4;x.strokeStyle=bg;x.strokeText('основа',p[0],p[1]-W*.05);x.fillText('основа',p[0],p[1]-W*.05)}});
+  (state.marks||[]).forEach(m=>{const t=undertone(m)==='cool'?'cool':state.temp,[px,py]=pos(toRyb(hsv(h2r(m)).h),state.temp);x.beginPath();x.arc(px,py,W*.014,0,7);x.fillStyle=m;x.fill();x.lineWidth=3;x.strokeStyle=bg;x.stroke();x.lineWidth=1.5;x.strokeStyle=ink;x.stroke()});
+  if(state.sel&&!isNeutral(state.sel)){const[px,py]=pos(toRyb(hsv(h2r(state.sel)).h),state.temp);x.beginPath();x.arc(px,py,W*.04,0,7);x.lineWidth=4;x.strokeStyle=css('--accent');x.stroke()}}
 document.getElementById('wheel').addEventListener('click',e=>{const cv=e.currentTarget,r=cv.getBoundingClientRect(),c=cv.width/2,x=(e.clientX-r.left)/r.width*cv.width-c,y=(e.clientY-r.top)/r.height*cv.height-c,d=Math.hypot(x,y);
   if(d<c*.4||d>c*.9)return;const t=d>=c*.655?'warm':'cool';let ang=Math.atan2(y,x)*180/Math.PI+90;ang=(ang+360)%360;const k=Math.round(ang/30)%12,prof=PROFILE[target];
   const hex=shade(k*30,t,Math.min(.46,prof.s*1.1),Math.max(.4,prof.v*.8));
   if(!anchorList().length){customBase=hex;baseId='custom';selected=null;renderAll();return}
-  anyRec=verdict(hex);selected=hex;renderAll();document.getElementById('heroBoard').scrollIntoView({behavior:'smooth',block:'center'})});
+  anyRec=verdict2(hex);selected=hex;renderAll();document.getElementById('heroBoard').scrollIntoView({behavior:'smooth',block:'center'})});
 
 // ===== доски =====
 function fit(src,bw,bh){const s=Math.min(bw/src.width,bh/src.height);return[src.width*s,src.height*s]}
@@ -523,35 +557,30 @@ function renderAll(){
   const acc=document.getElementById('accs');acc.innerHTML=item.accents.map((a,i)=>`<span class="acc"><i style="background:${a.hex}"></i>${i+1}. ${nameOf(a.hex)}<button type="button" data-del="${i}" aria-label="Убрать деталь ${i+1}">×</button></span>`).join('');
   document.getElementById('accHint').hidden=item.accents.length>0;
   acc.onclick=e=>{const d=e.target.dataset.del;if(d===undefined)return;item.accents.splice(+d,1);selected=null;drawEditor();renderAll()};
-  const recs=recommend(),st=schemeRecs(),srecs=st.list,pool=srecs.concat(recs,anyRec?[anyRec]:[]);if(!selected||!pool.some(r=>r.hex===selected))selected=(srecs[0]||recs[0]||{}).hex||null;
-  const cur=pool.find(r=>r.hex===selected),T=TARGETS.find(t=>t.id===target);
-  const L=anchorList();
-  chips(document.getElementById('baseChips'),L.map(b=>({id:b.id,name:`${b.label}: ${nameOf(b.hex)}`})),st.base&&st.base.id,id=>{baseId=id;selected=null;renderAll()});
-  document.getElementById('baseHint').textContent=L.length?'Основа ставится на круг, а схема строится от неё.':'Вещь и детали нейтральные. Коснись сектора круга, чтобы выбрать цвет, от которого строить схему, или отметь цветную деталь на фото.';
-  chips(document.getElementById('schemeChips'),SCHEMES,schemeId,id=>{schemeId=id;selected=null;renderAll()});
-  document.getElementById('schemeText').textContent=SCHEMES.find(x=>x.id===schemeId).text;
+  const P=palette(),pool=P.flat.concat(anyRec?[anyRec]:[]);
+  if(!selected||!pool.some(r=>r.hex===selected))selected=(P.flat.find(r=>r.tag!=='Нейтральная база'&&r.tag!=='Из деталей')||P.flat[0]||{}).hex||null;
+  const cur=pool.find(r=>r.hex===selected),T=TARGETS.find(t=>t.id===target),L=anchorList();
+  chips(document.getElementById('baseChips'),L.map(b=>({id:b.id,name:`${b.label}: ${nameOf(b.hex)}`})),P.base&&P.base.id,id=>{baseId=id;selected=null;anyRec=null;renderAll()});
+  document.getElementById('baseHint').textContent=L.length?'Основа ставится на круг, а палитра строится от неё: и по оттенку, и по яркости.':'Вещь и детали нейтральные. Коснись сектора круга, чтобы выбрать цвет, от которого строить палитру, или отметь цветную деталь на фото.';
+  chips(document.getElementById('schemeChips'),[{id:'all',name:'Все схемы'}].concat(SCHEMES.filter(x=>x.id!=='square')),schemeId,id=>{schemeId=id;selected=null;anyRec=null;renderAll()});
+  document.getElementById('schemeText').textContent=schemeId==='all'?'Показаны цвета всех схем сразу. Выбери схему, чтобы оставить в палитре только её.':SCHEMES.find(x=>x.id===schemeId).text;
   chips(document.getElementById('tempChips'),[{id:'auto',name:'Под подтон вещи'},{id:'warm',name:'Тёплые'},{id:'cool',name:'Холодные'}],tempMode,id=>{tempMode=id;selected=null;renderAll()});
-  document.getElementById('tempText').textContent=schemeId==='mono'?'В монохроме оттенок основы не меняется, поэтому тёплые и холодные оттенки здесь не применяются.':`Сейчас ${TONE_PL[st.temp]} оттенки${tempMode==='auto'?`: у вещи ${TONE[undertone(item.color)]} подтон`:''}. Тёплый оттенок цвета содержит желтизну, холодный — синеву: тёплый красный ближе к томатному, холодный к малиновому.`;
-  drawWheel(st);
-  document.getElementById('schemeTitle').textContent=st.sch?`Цвета схемы: ${st.sch.name.toLowerCase()}`:'Цвета схемы';
-  const sh=document.getElementById('schemeCards');sh.innerHTML=srecs.length?srecs.map(r=>`<button type="button" class="rec" data-hex="${r.hex}" aria-pressed="${r.hex===selected}"><canvas class="board" width="520" height="260"></canvas><span class="tag">${r.tag}</span><b>${r.name}</b><small class="mono" style="padding-inline:4px">${FABNAME[target]}</small><p>${r.why}</p></button>`).join(''):'<p class="hint">Выбери основу, чтобы увидеть цвета схемы.</p>';
-  sh.querySelectorAll('.rec').forEach((c,i)=>drawCompare(c.querySelector('canvas'),srecs[i]));
-  sh.onclick=e=>{const c=e.target.closest('.rec');if(!c)return;selected=c.dataset.hex;anyRec=null;renderAll();document.getElementById('heroBoard').scrollIntoView({behavior:'smooth',block:'center'})};
+  document.getElementById('tempText').textContent=`Сейчас ${TONE_PL[P.temp]} оттенки${tempMode==='auto'?`: у вещи ${TONE[undertone(item.color)]} подтон`:''}. Тёплый оттенок цвета содержит желтизну, холодный — синеву. В монохроме оттенок основы не меняется.`;
+  drawWheel({base:P.base,temp:P.temp,sch:P.sch,marks:P.flat.filter(r=>!isNeutral(r.hex)&&r.tag!=='Из деталей').map(r=>r.hex),sel:selected});
+  const pal=document.getElementById('palette');pal.innerHTML=P.groups.map(g=>`<div class="pgroup"><h3>${g.title}</h3><p class="hint">${g.text}</p><div class="sws">${g.items.map(r=>`<button type="button" class="swc" data-hex="${r.hex}" style="background:${r.hex}" aria-label="${r.name}" title="${r.name}" aria-pressed="${r.hex===selected}"></button>`).join('')}</div></div>`).join('');
+  pal.onclick=e=>{const b=e.target.closest('.swc');if(!b)return;selected=b.dataset.hex;anyRec=null;renderAll();document.getElementById('heroBoard').scrollIntoView({behavior:'smooth',block:'nearest'})};
   if(cur){if(adjFor!==cur.hex+target){adj={l:0,s:0,t:0};adjFor=cur.hex+target}heroCur=cur;
     const sl=(id,k,a,b)=>`<label class="adj"><span>${a}</span><input type="range" id="${id}" data-k="${k}" min="-1" max="1" step="0.05" value="${adj[k]}" aria-label="${a} — ${b}"><span>${b}</span></label>`;
-    document.getElementById('heroText').innerHTML=`<span class="tag">${cur.any?'Проверка · ':''}${cur.tag}</span><span class="big" id="heroName"></span><span class="mono" id="heroHex"></span><p>${cur.why}</p>
+    document.getElementById('heroText').innerHTML=`<span class="tag">${cur.any?'Проверка · ':''}${cur.tag}</span><span class="big" id="heroName"></span><span class="mono" id="heroHex"></span><p>${cur.why}</p>${cur.fix?`<button type="button" class="btn" id="useFix" data-hex="${cur.fix}" style="align-self:flex-start">Показать подходящий вариант</button>`:''}
       <div class="adjs"><h3>Подкорректировать оттенок</h3>${sl('adjL','l','темнее','светлее')}${sl('adjS','s','приглушённее','ярче')}${sl('adjT','t','холоднее','теплее')}<div class="row"><span class="hint" id="adjNote"></span><button type="button" class="btn ghost" id="adjReset">Сбросить</button></div></div>
       <canvas class="board" id="heroCmp" width="640" height="320" aria-label="Вещь крупно рядом с тканью"></canvas><div class="cap"><span>твоя вещь крупно</span><span id="heroCap"></span></div>`;
     drawHero()}
-  const host=document.getElementById('recs');host.innerHTML=recs.map(r=>`<button type="button" class="rec" data-hex="${r.hex}" aria-pressed="${r.hex===selected}"><canvas class="board" width="520" height="260"></canvas><span class="tag">${r.tag}</span><b>${r.name}</b><small class="mono" style="padding-inline:4px">${FABNAME[target]}</small><p>${r.why}</p></button>`).join('');
-  host.querySelectorAll('.rec').forEach((c,i)=>drawCompare(c.querySelector('canvas'),recs[i]));
-  host.onclick=e=>{const c=e.target.closest('.rec');if(!c)return;selected=c.dataset.hex;renderAll();document.getElementById('heroBoard').scrollIntoView({behavior:'smooth',block:'center'})};
   document.getElementById('ownRows').innerHTML=TARGETS.filter(t=>t.id!=='shoes'&&t.id!=='bag').map(t=>`<div class="own-row"><span>${t.name}<br><span class="state">${custom[t.id]?'Загружена твоя вещь':'Сейчас ткань приложения'}</span></span><span class="row">
     <label class="btn ghost" for="own-${t.id}">Загрузить фото</label><input type="file" id="own-${t.id}" data-t="${t.id}" accept="image/*">${custom[t.id]?`<button class="btn ghost" type="button" data-reset="${t.id}">Убрать</button>`:''}</span></div>`).join('')}
 document.getElementById('ownRows').addEventListener('change',e=>{const t=e.target.dataset.t,f=e.target.files&&e.target.files[0];if(t&&f)readFile(f,img=>enterWhite(t,img))});
 document.getElementById('ownRows').addEventListener('click',e=>{const t=e.target.dataset&&e.target.dataset.reset;if(!t)return;delete custom[t];store('own-'+t,null);Object.keys(gCache).forEach(k=>{if(k.startsWith(t+'|'))delete gCache[k]});renderAll()});
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change',renderAll);
-document.getElementById('anyPick').addEventListener('change',e=>{anyRec=verdict(e.target.value);selected=anyRec.hex;renderAll();document.getElementById('heroBoard').scrollIntoView({behavior:'smooth',block:'center'})});
+document.getElementById('anyPick').addEventListener('change',e=>{anyRec=verdict2(e.target.value);selected=anyRec.hex;renderAll();document.getElementById('heroBoard').scrollIntoView({behavior:'smooth',block:'center'})});
 
 // ===== старт: пример — серый пиджак в полоску с вышивкой =====
 renderModes();
