@@ -95,6 +95,7 @@ label.chk{display:flex;gap:8px;align-items:center;font-size:14px;cursor:pointer}
 .swc{width:40px;height:40px;border-radius:50%;border:2px solid var(--surface);box-shadow:0 0 0 1px var(--line);cursor:pointer;padding:0}
 .swc[aria-pressed="true"]{box-shadow:0 0 0 3px var(--accent)}
 .swc:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+a.btn{text-decoration:none}
 .foot{font-size:13px;color:var(--muted);max-width:76ch;margin:0}
 </style>
 </head><body>
@@ -102,7 +103,7 @@ label.chk{display:flex;gap:8px;align-items:center;font-size:14px;cursor:pointer}
 
 <div class="wrap">
   <header>
-    <span class="eyebrow">Стильно с Медведевой · прототип</span>
+    <span class="eyebrow">Стильно с Медведевой · приложение</span>
     <h1>Подбор цвета к образу</h1>
     <p class="lead">Сфотографируй вещь, обведи её и отметь касанием детали: вышивку, пуговицы, полоску. Приложение составит паспорт вещи и предложит несколько цветов с объяснением, почему каждый подходит. Сейчас открыт пример: серый пиджак в полоску с вышивкой.</p>
   </header>
@@ -181,7 +182,12 @@ label.chk{display:flex;gap:8px;align-items:center;font-size:14px;cursor:pointer}
     <div id="ownRows"></div>
   </section>
 
-  <p class="foot">Это прототип. Цвет определяется по фото и зависит от света, поэтому его можно поправить вручную. Рекомендации — направления по цветовому кругу и подтону, а не правила. Разглаживание мятой вещи и автоматический поиск деталей потребуют подключения ИИ-сервиса.</p>
+  <section class="panel fb">
+    <div><h2>Предложить улучшение</h2><p class="hint">Приложение развивается по вашим пожеланиям. Что неудобно, что непонятно, чего не хватает — напишите в комментариях к посту в канале. Все изменения появятся здесь, в этом же приложении.</p></div>
+    <div class="row"><a class="btn" href="https://t.me/medvedeva_style" target="_blank" rel="noopener">Написать в Telegram</a><a class="btn ghost" href="https://max.ru/channel_medvedeva_style" target="_blank" rel="noopener">Написать в MAX</a></div>
+  </section>
+
+  <p class="foot">Цвет определяется по фото и зависит от света, поэтому его можно поправить вручную. Рекомендации — направления по цветовому кругу, подтону и яркости, а не правила. Фото, которые вы загружаете, никуда не отправляются и остаются в вашем телефоне. Автор приложения: Татьяна Медведева, «Стильно с Медведевой».</p>
 </div>
 
 <script>
