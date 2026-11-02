@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Что не так? Выпуск 3 — игра от «Стильно с Медведевой»</title>
+<meta name="description" content="Тёплый или холодный? Шесть карточек, чтобы научиться видеть температуру цвета. Игра от стилиста Татьяны Медведевой.">
+<meta property="og:title" content="Что не так? Выпуск 3: тёплый или холодный?">
+<meta property="og:description" content="Шесть карточек, чтобы научиться видеть температуру цвета. Сможете угадать все?">
+<meta property="og:image" content="https://mmkproject03-dotcom.github.io/chto-ne-tak/v3/cover.jpg">
+<meta property="og:url" content="https://mmkproject03-dotcom.github.io/chto-ne-tak/v3/">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F3EEE6; --card:#FBF8F3; --ink:#26211E; --muted:#786C62; --line:#E2D9CC;
+    --accent:#963C32; --accent-ink:#fff; --best:#3F6B4A; --best-bg:#E6EFE6; --half:#8A6420; --half-bg:#F6EDD9; --no:#786C62; --no-bg:#EFE9E1;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--ink)}
+  body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:17px;line-height:1.5;
+       -webkit-font-smoothing:antialiased;min-height:100vh;min-height:100dvh}
+  .wrap{max-width:520px;margin:0 auto;padding:20px 16px calc(28px + env(safe-area-inset-bottom))}
+  .kicker{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);text-align:center}
+  .lead{font-family:Lora,Georgia,serif;font-style:italic;color:var(--accent);font-size:21px;text-align:center;margin-top:16px}
+  .intro p{text-align:center;margin:14px auto 0;max-width:30em}
+  .legend{font-size:15px;color:var(--muted);text-align:center;margin-top:10px}
+  .cover{width:100%;border-radius:14px;display:block}
+  .btn{display:block;width:100%;border:0;border-radius:12px;padding:16px 18px;font:600 17px/1.2 Inter,system-ui,sans-serif;
+       background:var(--accent);color:var(--accent-ink);cursor:pointer;text-align:center;text-decoration:none;margin-top:18px;
+       -webkit-tap-highlight-color:transparent;transition:transform .08s ease}
+  .btn:active{transform:scale(.98)}
+  .btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
+  .link{display:block;text-align:center;margin-top:16px;color:var(--muted);font-size:15px}
+  .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .step{font-family:Lora,Georgia,serif;font-weight:600;font-size:22px}
+  .score{font-size:14px;color:var(--muted)}
+  .bar{height:4px;background:var(--line);border-radius:4px;overflow:hidden;margin-bottom:14px}
+  .bar i{display:block;height:100%;background:var(--accent);transition:width .3s}
+  .photo{width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:14px;display:block;background:var(--line)}
+  .q{font-family:Lora,Georgia,serif;font-size:20px;margin:16px 0 4px}
+  .hint{font-size:14px;color:var(--muted);font-style:italic;margin-top:4px}
+  .opts{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+  .opt{display:flex;gap:12px;align-items:flex-start;text-align:left;border:1.5px solid var(--line);background:var(--card);color:var(--ink);
+       border-radius:12px;padding:13px 14px;font:500 16px/1.35 Inter,system-ui,sans-serif;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .opt .n{flex:none;width:26px;height:26px;border-radius:50%;background:var(--bg);display:grid;place-items:center;font-weight:600;font-size:14px}
+  .opt:disabled{cursor:default}
+  .opt.dim{opacity:.45}
+  .opt.picked{border-color:var(--ink)}
+  .opt .g{margin-left:auto;flex:none}
+  .verdict{border-radius:14px;padding:16px 16px 18px;margin-top:16px;animation:in .25s ease;border:1px solid var(--line);background:var(--card)}
+  .verdict b{display:block;font-family:Lora,Georgia,serif;font-size:21px;margin-bottom:6px}
+  .verdict.best{background:var(--best-bg);border-color:#C9DCC9} .verdict.best b{color:var(--best)}
+  .verdict.half{background:var(--half-bg);border-color:#E8D7B0} .verdict.half b{color:var(--half)}
+  .verdict.no b{color:var(--no)}
+  .verdict .you{font-size:14px;color:var(--muted);margin-bottom:8px}
+  .tip{margin-top:12px;padding-top:12px;border-top:1px solid rgba(0,0,0,.08)}
+  @keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .final{text-align:center;padding-top:30px}
+  .big{font-family:Lora,Georgia,serif;font-weight:600;font-size:64px;line-height:1;margin:16px 0 6px}
+  .big small{font-size:28px;color:var(--muted)}
+  .sub{color:var(--muted)}
+  .final p{margin:14px auto 0;max-width:28em}
+  .sign{margin-top:26px;font-size:13px;color:var(--muted);text-align:center}
+  .photo{aspect-ratio:1080/1350;object-fit:contain;background:#fff}
+  video.photo{background:#fff}
+  .optrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:10px;margin-top:14px}
+  .optrow .opt{justify-content:center;font-size:18px;padding:14px 10px}
+  .verdict.best{background:var(--best-bg)} .verdict.no{background:var(--no-bg)}
+  .replay{display:block;margin:8px auto 0;background:none;border:0;color:var(--muted);font:500 14px Inter,sans-serif;text-decoration:underline;cursor:pointer}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <section id="intro" class="intro">
+    <img class="cover" src="cover.jpg" alt="Что не так? Выпуск 3. Тёплый или холодный?">
+    <p>У каждого цвета есть тёплый и холодный оттенок. Тёплый получается с каплей жёлтого, холодный — с каплей синего. Научимся видеть разницу за шесть карточек — от простого к сложному.</p>
+    <p class="legend">После каждого ответа — анимация: как получается этот оттенок.</p>
+    <button class="btn" id="start">Начать</button>
+    <a class="link" href="../v2/">Прошлый выпуск →</a>
+  </section>
+
+  <section id="game" hidden>
+    <div class="top"><div class="step" id="step"></div><div class="score" id="score"></div></div>
+    <div class="bar"><i id="bar"></i></div>
+    <img class="photo" id="photo" alt="Карточка">
+    <video class="photo" id="vid" muted playsinline preload="auto" hidden></video>
+    <button class="replay" id="replay" hidden>Показать анимацию ещё раз</button>
+    <div class="q" id="q"></div>
+    <div class="optrow" id="opts"></div>
+    <div class="verdict" id="verdict" hidden></div>
+    <button class="btn" id="next" hidden>Дальше</button>
+  </section>
+
+  <section id="final" class="final" hidden>
+    <div class="kicker">Ваш результат</div>
+    <div class="big" id="fscore"></div>
+    <p id="ftext"></p>
+    <p>Главный секрет: сравнивайте оттенки рядом. По одной вещи температуру определить трудно, а рядом с другой она видна сразу.</p>
+    <a class="btn" href="../podbor/">Подобрать цвета к своей вещи — приложение «Подбор цвета»</a>
+    <div id="chans">
+      <a class="btn ghost" id="ch-max" href="https://max.ru/channel_medvedeva_style" target="_blank" rel="noopener">Канал в MAX</a>
+      <a class="btn ghost" id="ch-tg" href="https://t.me/medvedeva_style" target="_blank" rel="noopener">Канал в Telegram</a>
+    </div>
+    <button class="btn ghost" id="again">Сыграть ещё раз</button>
+    <a class="link" href="../v2/">Прошлый выпуск →</a>
+  </section>
+
+  <div class="sign">Стилист Татьяна Медведева</div>
+</div>
+
+<script>
+const CARDS = [
+ {
+  "q": "Два красных свитера. Какой из них тёплый?",
+  "o": [
+   "1",
+   "2"
+  ],
+  "a": 1,
+  "t": "Тёплый красный получается, если добавить каплю жёлтого: он уходит в томатный. Холодный — с каплей синего: он уходит в малиновый.",
+  "img": "k1-q.jpg",
+  "vid": "k1-a.mp4",
+  "poster": "k1-a.jpg"
+ },
+ {
+  "q": "А теперь наоборот: какой розовый холодный?",
+  "o": [
+   "1",
+   "2"
+  ],
+  "a": 1,
+  "t": "Капля синего делает розовый холодным — получается фуксия. Капля жёлтого делает его тёплым — он уходит в коралловый и персиковый.",
+  "img": "k2-q.jpg",
+  "vid": "k2-a.mp4",
+  "poster": "k2-a.jpg"
+ },
+ {
+  "q": "Три рубашки холодного зелёного и одна тёплого. Найдите тёплую.",
+  "o": [
+   "1",
+   "2",
+   "3",
+   "4"
+  ],
+  "a": 1,
+  "t": "В тёплом зелёном больше жёлтого — он уходит в оливковый. В холодных больше синего: изумрудный, морская волна, бутылочный.",
+  "img": "k3-q.jpg",
+  "vid": "k3-a.mp4",
+  "poster": "k3-a.jpg"
+ },
+ {
+  "q": "У серого тоже есть температура. Какое пальто холодное?",
+  "o": [
+   "1",
+   "2"
+  ],
+  "a": 0,
+  "t": "Холодный серый — с каплей синего, он голубоватый. Тёплый серый — с каплей жёлтого, он уходит в серо-бежевый. В сером подтон едва заметен, поэтому сравнивайте вещи рядом.",
+  "img": "k4-q.jpg",
+  "vid": "k4-a.mp4",
+  "poster": "k4-a.jpg"
+ },
+ {
+  "q": "Белый и чёрный тоже бывают тёплыми и холодными. Какие две водолазки тёплые?",
+  "o": [
+   "1 и 3",
+   "1 и 4",
+   "2 и 3",
+   "2 и 4"
+  ],
+  "a": 3,
+  "t": "Тёплый белый с желтизной — молочный, холодный с голубизной — оптический белый. Тёплый чёрный уходит в коричневый, холодный — в синий. Тёплая пара — молочный и коричнево-чёрный.",
+  "img": "k5-q.jpg",
+  "vid": "k5-a.mp4",
+  "poster": "k5-a.jpg"
+ },
+ {
+  "q": "Все вещи этого образа тёплые, кроме одной. Какая?",
+  "o": [
+   "Пальто",
+   "Джемпер",
+   "Шарф",
+   "Брюки",
+   "Сумка",
+   "Ботильоны"
+  ],
+  "a": 2,
+  "t": "Пальто кэмел, молочный джемпер, шоколадные брюки, коньячные ботильоны и карамельная сумка — тёплые. Розовый шарф холодный, в нём есть синева. С каплей жёлтого он становится коралловым и попадает в тёплую гамму образа.",
+  "img": "k6-q.jpg",
+  "vid": "k6-a.mp4",
+  "poster": "k6-a.jpg"
+ }
+];
+const $ = id => document.getElementById(id);
+let i = 0, ok = 0;
+CARDS.forEach(c => [c.img, c.poster].forEach(s => { const im = new Image(); im.src = s; }));
+function show(id){ ["intro","game","final"].forEach(s => $(s).hidden = s !== id); window.scrollTo(0,0); }
+function render(){
+  const c = CARDS[i];
+  $("step").textContent = `Карточка ${i+1} из ${CARDS.length}`;
+  $("score").textContent = `✔ ${ok}`;
+  $("bar").style.width = `${i/CARDS.length*100}%`;
+  $("photo").src = c.img; $("photo").hidden = false;
+  const v = $("vid"); v.pause(); v.hidden = true; v.src = c.vid; v.poster = c.poster; v.load();
+  $("replay").hidden = true;
+  $("q").textContent = c.q;
+  $("verdict").hidden = true; $("next").hidden = true;
+  const box = $("opts"); box.innerHTML = "";
+  c.opts = c.o;
+  c.o.forEach((o, n) => {
+    const b = document.createElement("button");
+    b.className = "opt"; b.textContent = o; b.onclick = () => pick(n); box.appendChild(b);
+  });
+}
+function play(){ const v = $("vid"); $("photo").hidden = true; v.hidden = false; v.currentTime = 0; const p = v.play(); if (p) p.catch(() => { v.hidden = true; $("photo").src = CARDS[i].poster; $("photo").hidden = false; }); }
+function pick(n){
+  const c = CARDS[i], right = n === c.a;
+  if (right) ok++;
+  [...$("opts").children].forEach((b, k) => {
+    b.disabled = true;
+    if (k === c.a) b.classList.add("picked");
+    else b.classList.add("dim");
+    if (k === n) b.textContent += right ? " ✔" : " ✘";
+  });
+  const v = $("verdict");
+  v.className = "verdict " + (right ? "best" : "no");
+  v.innerHTML = `<b>${right ? "Верно!" : "Не совсем"}</b>` + (right ? "" : `<div class="you">Правильный ответ: ${c.o[c.a]}</div>`) + `<div>${c.t}</div>`;
+  v.hidden = false;
+  play(); $("replay").hidden = false;
+  $("score").textContent = `✔ ${ok}`;
+  $("bar").style.width = `${(i+1)/CARDS.length*100}%`;
+  $("next").textContent = i === CARDS.length-1 ? "Узнать результат" : "Дальше";
+  $("next").hidden = false;
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+$("replay").onclick = play;
+function finish(){
+  const n = CARDS.length;
+  $("fscore").innerHTML = `✔ ${ok}<small> из ${n}</small>`;
+  $("ftext").textContent = ok === n ? "Вы видите температуру цвета, как стилист!"
+    : ok >= n - 2 ? "Отличный глаз на оттенки."
+    : "Различать температуру цвета — это навык, и он тренируется. Каждую неделю — новый выпуск.";
+  show("final");
+}
+(() => {
+  const tgFirst = new URLSearchParams(location.search).has("tg");
+  const first = tgFirst ? $("ch-tg") : $("ch-max"), second = tgFirst ? $("ch-max") : $("ch-tg");
+  $("chans").append(first, second);
+})();
+$("start").onclick = () => { i = 0; ok = 0; show("game"); render(); };
+$("again").onclick = () => show("intro");
+$("next").onclick = () => { i++; if (i < CARDS.length) { render(); window.scrollTo(0,0); } else finish(); };
+</script>
+</body>
+</html>
