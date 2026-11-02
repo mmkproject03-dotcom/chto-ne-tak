@@ -66,11 +66,13 @@
   .sign{margin-top:26px;font-size:13px;color:var(--muted);text-align:center}
   .photo{aspect-ratio:1080/1350;object-fit:contain;background:#fff}
   video.photo{background:#fff}
-  .optrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:10px;margin-top:14px}
-  .optrow .opt{justify-content:center;font-size:18px;padding:14px 10px}
+  .optrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:10px;margin-top:14px}
+  .optrow .opt{justify-content:center;font-size:16px;padding:14px 8px}
   .verdict.best{background:var(--best-bg)} .verdict.no{background:var(--no-bg)}
   .replay{display:block;margin:8px auto 0;background:none;border:0;color:var(--muted);font:500 14px Inter,sans-serif;text-decoration:underline;cursor:pointer}
   .eds{text-align:center;margin-top:18px;font-size:15px;color:var(--muted)} .eds a{color:var(--ink);font-weight:500}
+  .opt.on{border-color:var(--accent);background:#F6E6E2}
+  .btn:disabled{opacity:.45}
   [hidden]{display:none!important}
 </style>
 </head>
@@ -93,6 +95,8 @@
     <button class="replay" id="replay" hidden>Показать анимацию ещё раз</button>
     <div class="q" id="q"></div>
     <div class="optrow" id="opts"></div>
+    <div class="hint" id="mhint" hidden>Можно выбрать несколько вариантов.</div>
+    <button class="btn" id="check" hidden>Проверить</button>
     <div class="verdict" id="verdict" hidden></div>
     <button class="btn" id="next" hidden>Дальше</button>
   </section>
@@ -181,7 +185,7 @@ const CARDS = [
   "poster": "k5-a.jpg"
  },
  {
-  "q": "Все вещи этого образа тёплые, кроме одной. Какая?",
+  "q": "Итоговое задание: отметьте все холодные вещи в образе.",
   "o": [
    "Пальто",
    "Джемпер",
@@ -190,8 +194,13 @@ const CARDS = [
    "Сумка",
    "Ботильоны"
   ],
-  "a": 2,
-  "t": "Пальто кэмел, молочный джемпер, шоколадные брюки, коньячные ботильоны и карамельная сумка — тёплые. Розовый шарф холодный, в нём есть синева. С каплей жёлтого он становится коралловым и попадает в тёплую гамму образа.",
+  "a": [
+   0,
+   3,
+   4
+  ],
+  "multi": true,
+  "t": "Холодные: пальто — серый с голубизной, брюки — чёрный с синевой, сумка — красный с синевой. Тёплые: молочный джемпер, розовый шарф с желтизной и ботильоны в коричневато-чёрный. Даже в одном образе каждую вещь можно проверить отдельно: есть в ней капля жёлтого или капля синего.",
   "img": "k6-q.jpg",
   "vid": "k6-a.mp4",
   "poster": "k6-a.jpg"
@@ -213,24 +222,32 @@ function render(){
   $("verdict").hidden = true; $("next").hidden = true;
   const box = $("opts"); box.innerHTML = "";
   c.opts = c.o;
+  sel = new Set();
   c.o.forEach((o, n) => {
     const b = document.createElement("button");
-    b.className = "opt"; b.textContent = o; b.onclick = () => pick(n); box.appendChild(b);
+    b.className = "opt"; b.textContent = o;
+    b.onclick = c.multi ? () => { sel.has(n) ? sel.delete(n) : sel.add(n); b.classList.toggle("on", sel.has(n)); $("check").disabled = !sel.size; } : () => pick(n);
+    box.appendChild(b);
   });
+  $("check").hidden = !c.multi; $("check").disabled = true;
+  $("mhint").hidden = !c.multi;
 }
 function play(){ const v = $("vid"); $("photo").hidden = true; v.hidden = false; v.currentTime = 0; const p = v.play(); if (p) p.catch(() => { v.hidden = true; $("photo").src = CARDS[i].poster; $("photo").hidden = false; }); }
+let sel = new Set();
 function pick(n){
-  const c = CARDS[i], right = n === c.a;
+  const c = CARDS[i], ans = c.multi ? new Set(c.a) : new Set([c.a]), chosen = c.multi ? sel : new Set([n]);
+  const right = ans.size === chosen.size && [...ans].every(k => chosen.has(k));
   if (right) ok++;
+  $("check").hidden = true; $("mhint").hidden = true;
   [...$("opts").children].forEach((b, k) => {
-    b.disabled = true;
-    if (k === c.a) b.classList.add("picked");
-    else b.classList.add("dim");
-    if (k === n) b.textContent += right ? " ✔" : " ✘";
+    b.disabled = true; b.classList.remove("on");
+    if (ans.has(k)) b.classList.add("picked"); else b.classList.add("dim");
+    if (chosen.has(k)) b.textContent += ans.has(k) ? " ✔" : " ✘";
   });
+  c._right = right;
   const v = $("verdict");
   v.className = "verdict " + (right ? "best" : "no");
-  v.innerHTML = `<b>${right ? "Верно!" : "Не совсем"}</b>` + (right ? "" : `<div class="you">Правильный ответ: ${c.o[c.a]}</div>`) + `<div>${c.t}</div>`;
+  v.innerHTML = `<b>${right ? "Верно!" : "Не совсем"}</b>` + (right ? "" : `<div class="you">Правильный ответ: ${c.multi ? c.a.map(k => c.o[k]).join(", ") : c.o[c.a]}</div>`) + `<div>${c.t}</div>`;
   v.hidden = false;
   play(); $("replay").hidden = false;
   $("score").textContent = `✔ ${ok}`;
@@ -240,6 +257,7 @@ function pick(n){
   window.scrollTo({top:0, behavior:"smooth"});
 }
 $("replay").onclick = play;
+$("check").onclick = () => pick(-1);
 function finish(){
   const n = CARDS.length;
   $("fscore").innerHTML = `✔ ${ok}<small> из ${n}</small>`;
