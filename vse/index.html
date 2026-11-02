@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Что не так? Все выпуски — игры от «Стильно с Медведевой»</title>
+<meta name="description" content="Игры от стилиста Татьяны Медведевой: учимся видеть образ, пропорции и цвет.">
+<meta property="og:title" content="Что не так? Все выпуски">
+<meta property="og:image" content="https://mmkproject03-dotcom.github.io/chto-ne-tak/v3/cover.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  :root{--bg:#F3EEE6;--card:#FBF8F3;--ink:#26211E;--muted:#786C62;--line:#E2D9CC;--accent:#963C32}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--ink)}
+  body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:17px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:520px;margin:0 auto;padding:22px 16px calc(28px + env(safe-area-inset-bottom))}
+  .kicker{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);text-align:center}
+  h1{font-family:Lora,Georgia,serif;font-weight:600;font-size:34px;text-align:center;margin-top:6px}
+  .lead{text-align:center;color:var(--muted);margin:8px auto 22px;max-width:28em}
+  .ed{display:block;text-decoration:none;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;margin-bottom:16px;-webkit-tap-highlight-color:transparent}
+  .ed img{width:100%;display:block;aspect-ratio:4/5;object-fit:cover;background:var(--line)}
+  .ed.small{display:flex;gap:14px;align-items:center;padding:10px}
+  .ed.small img{width:88px;aspect-ratio:4/5;border-radius:10px;flex:none}
+  .meta{padding:14px 16px 16px}
+  .ed.small .meta{padding:0}
+  .num{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:600}
+  .name{font-family:Lora,Georgia,serif;font-size:22px;font-weight:600;margin-top:2px}
+  .ed.small .name{font-size:19px}
+  .what{font-size:15px;color:var(--muted);margin-top:4px}
+  .new{display:inline-block;background:var(--accent);color:#fff;font-size:12px;font-weight:600;border-radius:20px;padding:2px 9px;margin-left:6px;vertical-align:2px}
+  .h2{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:26px 0 12px}
+  .btn{display:block;text-align:center;text-decoration:none;border:1.5px solid var(--ink);color:var(--ink);border-radius:12px;padding:14px;font-weight:600;margin-top:12px}
+  .sign{margin-top:26px;font-size:13px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">Стильно с Медведевой</div>
+  <h1>Что не так?</h1>
+  <p class="lead">Игры, в которых вы учитесь видеть образ, как стилист. Каждую неделю — новый выпуск.</p>
+
+  <a class="ed" href="../v3/"><img src="../v3/cover.jpg?v=5" alt="">
+    <div class="meta"><div class="num">Выпуск 3 <span class="new">новый</span></div><div class="name">Тёплый или холодный?</div><div class="what">Учимся видеть температуру цвета</div></div></a>
+
+  <div class="h2">Прошлые выпуски</div>
+  <a class="ed small" href="../v2/"><img src="../v2/cover.jpg" alt="">
+    <div class="meta"><div class="num">Выпуск 2</div><div class="name">Что к чему?</div><div class="what">Несколько правок — другое впечатление</div></div></a>
+  <a class="ed small" href="../"><img src="../cover.jpg" alt="">
+    <div class="meta"><div class="num">Выпуск 1</div><div class="name">Найди, что мешает</div><div class="what">В каждом образе что-то мешает: увидеть и назвать</div></div></a>
+
+  <div class="h2">Ещё от меня</div>
+  <a class="btn" href="../podbor/">Приложение «Подбор цвета»</a>
+  <a class="btn" href="https://t.me/medvedeva_style">Канал в Telegram</a>
+  <div class="sign">Стилист Татьяна Медведева</div>
+</div>
+<script>
+try{const tg=window.Telegram&&Telegram.WebApp;if(tg&&tg.initData!==undefined){tg.ready();tg.expand();tg.setHeaderColor&&tg.setHeaderColor('#F3EEE6');tg.setBackgroundColor&&tg.setBackgroundColor('#F3EEE6')}}catch(e){}
+</script>
+</body>
+</html>
