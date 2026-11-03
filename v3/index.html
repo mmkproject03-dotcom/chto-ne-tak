@@ -267,7 +267,10 @@ function pick(n){
 }
 $("replay").onclick = play;
 $("check").onclick = () => pick(-1);
+// счётчик прохождений (без личных данных): abacus.jasoncameron.dev
+function track(k){ try{ fetch('https://abacus.jasoncameron.dev/hit/medvedeva-chtonetak/v3-'+k,{mode:'cors',keepalive:true}).catch(()=>{}); }catch(e){} }
 function finish(){
+  track("finish");
   const n = CARDS.length;
   $("fscore").innerHTML = `✔ ${ok}<small> из ${n}</small>`;
   $("ftext").textContent = ok === n ? "Вы видите температуру цвета, как стилист!"
@@ -280,7 +283,7 @@ function finish(){
   const first = tgFirst ? $("ch-tg") : $("ch-max"), second = tgFirst ? $("ch-max") : $("ch-tg");
   $("chans").append(first, second);
 })();
-$("start").onclick = () => { i = 0; ok = 0; show("game"); render(); };
+$("start").onclick = () => { track("start"); i = 0; ok = 0; show("game"); render(); };
 $("again").onclick = () => show("intro");
 $("next").onclick = () => { i++; if (i < CARDS.length) { render(); window.scrollTo(0,0); } else finish(); };
 </script>

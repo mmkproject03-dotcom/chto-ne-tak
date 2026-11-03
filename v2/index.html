@@ -337,7 +337,10 @@ $("showbest").onclick = () => {
   window.scrollTo({top:0, behavior:"smooth"});
 };
 
+// счётчик прохождений (без личных данных): abacus.jasoncameron.dev
+function track(k){ try{ fetch('https://abacus.jasoncameron.dev/hit/medvedeva-chtonetak/v2-'+k,{mode:'cors',keepalive:true}).catch(()=>{}); }catch(e){} }
 function finish(){
+  track("finish");
   const n = CARDS.length;
   $("fscore").innerHTML = `⭐ ${best}<small> из ${n}</small>`;
   $("fhalf").textContent = `👌 Шаг в верном направлении — ${half}`;
@@ -356,7 +359,7 @@ function finish(){
 })();
 
 const restart = () => { i = 0; best = 0; half = 0; show("game"); render(); };
-$("start").onclick = restart;
+$("start").onclick = () => { track("start"); restart(); };
 $("again").onclick = () => show("intro");
 $("next").onclick = () => { i++; if (i < CARDS.length) { render(); window.scrollTo(0,0); } else finish(); };
 </script>

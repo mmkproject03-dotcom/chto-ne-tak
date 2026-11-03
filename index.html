@@ -167,7 +167,10 @@ function pick(choice, btn){
   $("verdict").scrollIntoView({behavior:"smooth", block:"start"});
 }
 
+// счётчик прохождений (без личных данных): abacus.jasoncameron.dev
+function track(k){ try{ fetch('https://abacus.jasoncameron.dev/hit/medvedeva-chtonetak/v1-'+k,{mode:'cors',keepalive:true}).catch(()=>{}); }catch(e){} }
 function finish(){
+  track("finish");
   const n = CARDS.length;
   $("fscore").innerHTML = `${score}<small> из ${n}</small>`;
   $("ftext").textContent = score === n ? "У вас глаз стилиста!"
@@ -184,7 +187,7 @@ function finish(){
   $("chans").append(first, second);
 })();
 
-$("start").onclick = () => { i = 0; score = 0; show("game"); render(); };
+$("start").onclick = () => { track("start"); i = 0; score = 0; show("game"); render(); };
 $("next").onclick = () => { i++; if (i < CARDS.length) { render(); window.scrollTo(0,0); } else finish(); };
 $("again").onclick = () => { i = 0; score = 0; show("game"); render(); };
 </script>
